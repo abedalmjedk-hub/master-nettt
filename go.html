@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>MALAK NET</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+body{
+direction:rtl;
+font-family:'Tajawal',sans-serif;
+background:linear-gradient(120deg,#6ecffd,#a7e8ff,#d4f3ff);
+text-align:center;
+margin:0;
+padding:0;
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.box-L{
+background:#ffffff;
+border-radius:25px;
+box-shadow:0 8px 25px rgba(0,0,0,0.15);
+padding:40px 30px;
+width:90%;
+max-width:400px;
+animation:fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn{
+from{opacity:0;transform:scale(0.95);}
+to{opacity:1;transform:scale(1);}
+}
+
+.info-text{
+font-size:18px;
+color:#2c3e30;
+line-height:1.8;
+margin-bottom:25px;
+}
+
+.note{
+font-weight:bold;
+color:#0ea5e9;
+margin-bottom:10px;
+font-size:20px;
+}
+
+.go-site button{
+display:inline-block;
+background:linear-gradient(90deg,#FF4E50,#F9D423);
+color:#fff;
+font-size:18px;
+padding:12px 25px;
+border-radius:14px;
+border:none;
+font-weight:bold;
+box-shadow:0 4px 10px rgba(0,0,0,0.20);
+transition:0.3s ease;
+cursor:pointer;
+}
+
+.go-site button:hover{
+transform:scale(1.05);
+opacity:0.9;
+}
+.welcome{
+    margin-bottom:15px;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.welcome .text{
+    font-size:16px;
+    color:#64748b;
+}
+
+.welcome .name{
+    font-size:24px;
+    font-weight:bold;
+    background:linear-gradient(90deg,#0ea5e9,#38bdf8,#60a5fa);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:fadeSlide 0.8s ease;
+}
+
+/* ✨ حركة دخول */
+@keyframes fadeSlide{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="box-L">
+
+<!-- 🔥 اسم المشترك -->
+<div class="welcome">
+    <span class="text">أهلاً بك لدى</span>
+    <span id="note" class="name"></span>
+</div>
+
+<div class="info-text">
+<b>الإنترنت بين يديك الآن لمدة 7 دقائق</b><br>
+إبدأ تجربة سريعة
+</div>
+
+<form name="login" action="$(link-login-only)" method="post">
+
+<input type="hidden" name="username" id="user">
+<input type="hidden" name="password" value="">
+<input type="hidden" name="dst" value="$(link-orig)">
+<input type="hidden" name="popup" value="true">
+
+<div class="go-site">
+<button type="submit">
+اضغط هنا
+</button>
+</div>
+
+</form>
+
+</div>
+
+<script>
+
+// 🔥 قراءة البيانات من الرابط
+let params = new URLSearchParams(window.location.search);
+
+let realUser = params.get("r");
+let note = params.get("n");
+
+// 🛑 حماية
+if(!realUser){
+    alert("خطأ في الرابط");
+}
+
+// 👇 حط اليوزر الحقيقي
+document.getElementById("user").value = realUser;
+
+// 👇 عرض اسم المستخدم
+document.getElementById("note").innerText = note || "";
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>لوحة التحكم باليوزرات المميزين | ماستر نت</title>
+<script src="imad44.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --primary: #00a2ed;
+    --primary-hover: #0088cc;
+    --bg-dark: #0f172a;
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-white: #f8fafc;
+    --text-muted: #94a3b8;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Cairo', sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(0, 162, 237, 0.15) 0px, transparent 40%),
+        radial-gradient(at 100% 100%, rgba(1, 43, 125, 0.15) 0px, transparent 40%);
+    background-attachment: fixed;
+    color: var(--text-white);
+    min-height: 100vh;
+    padding: 30px 15px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 35px 25px;
+    border-radius: 28px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.dashboard-header h2 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #ffffff, var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 5px;
+}
+
+.dashboard-header p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.counter-badge {
+    background: rgba(0, 162, 237, 0.12);
+    border: 1px solid rgba(0, 162, 237, 0.2);
+    color: var(--primary);
+    padding: 6px 16px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.search {
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.search input {
+    width: 100%;
+    padding: 16px 20px 16px 45px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.6);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    text-align: right;
+}
+
+.search input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 162, 237, 0.2);
+    outline: none;
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.table-container {
+    overflow-x: auto;
+    border-radius: 18px;
+    border: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.4);
+    margin-bottom: 25px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+th {
+    background: rgba(0, 162, 237, 0.1);
+    color: var(--primary);
+    padding: 16px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    text-align: right;
+    border-bottom: 2px solid var(--border-color);
+}
+
+td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+tr:hover {
+    background: rgba(0, 162, 237, 0.03);
+}
+
+input.cell-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(15, 23, 42, 0.6);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+input.cell-input:focus {
+    border-color: var(--primary);
+    background: rgba(15, 23, 42, 0.9);
+    outline: none;
+}
+
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+.btn-add {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.2);
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.2);
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+}
+
+.btn-del {
+    padding: 8px;
+    width: 34px;
+    height: 34px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+}
+
+.btn-del:hover {
+    background: #ef4444;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+}
+
+.actions {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* 🔐 شاشة القفل الفاخرة */
+#lockScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: all 0.5s ease;
+}
+
+.lock-card {
+    background: rgba(30, 41, 59, 0.7);
+    padding: 40px 30px;
+    border-radius: 24px;
+    text-align: center;
+    width: 90%;
+    max-width: 360px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    animation: lockFade 0.6s ease;
+}
+
+@keyframes lockFade {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.lock-card h3 {
+    font-size: 1.4rem;
+    font-weight: 900;
+    margin-bottom: 10px;
+    color: var(--text-white);
+}
+
+.lock-card p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.lock-card input[type="password"] {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.6);
+    color: #fff;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 5px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.lock-card input[type="password"]::placeholder {
+    letter-spacing: normal;
+    font-size: 0.9rem;
+}
+
+.lock-card input[type="password"]:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 162, 237, 0.2);
+    outline: none;
+}
+
+.remember-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    margin-bottom: 25px;
+    font-weight: 700;
+}
+
+.remember-label input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.lock-card button {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary), #0088cc);
+    color: white;
+    font-weight: 900;
+    box-shadow: 0 6px 15px rgba(0, 162, 237, 0.2);
+}
+
+.lock-card button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 162, 237, 0.3);
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px 15px;
+    }
+    th, td {
+        padding: 10px;
+        font-size: 0.8rem;
+    }
+    input.cell-input {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+    button {
+        padding: 10px 14px;
+        font-size: 0.8rem;
+    }
+    .btn-del {
+        width: 30px;
+        height: 30px;
+        padding: 6px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔐 شاشة القفل الفاخرة -->
+<div id="lockScreen">
+    <div class="lock-card">
+        <span style="font-size: 3rem; display: block; margin-bottom: 10px;">🔐</span>
+        <h3>لوحة إدارة المشتركين</h3>
+        <p>يرجى إدخال كلمة مرور النظام للمتابعة</p>
+        
+        <input id="passInput" type="password" placeholder="••••••••">
+        
+        <label class="remember-label">
+            <input type="checkbox" id="rememberMe" checked>
+            تذكرني على هذا الجهاز
+        </label>
+        
+        <button onclick="checkPass()">تسجيل الدخول</button>
+    </div>
+</div>
+
+<!-- محتوى لوحة التحكم الأساسي -->
+<div class="container">
+    <div class="dashboard-header">
+        <h2>🔥 إدارة المشتركين المميزين</h2>
+        <p>أضف أو عدل الاختصارات المخصصة لشركاء الشبكة والمحلات التجارية</p>
+        <span class="counter-badge" id="totalCounter">إجمالي المشتركين المميزين: 0</span>
+    </div>
+
+    <div class="search">
+        <input type="text" placeholder="🔍 ابحث عن اسم مشترك أو كود..." onkeyup="searchUser(this.value)">
+    </div>
+
+    <div class="table-container">
+        <table id="table">
+            <thead>
+                <tr>
+                    <th>كود الدخول (Username)</th>
+                    <th>كود مايكروتك الحقيقي (Real User)</th>
+                    <th>الاسم / التعليق (Note)</th>
+                    <th style="width: 70px; text-align: center;">حذف</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="actions">
+        <button class="btn-add" onclick="addRow()">➕ إضافة مشترك جديد</button>
+        <button class="btn-save" onclick="save()">💾 حفظ وإصدار ملف التشغيل</button>
+    </div>
+</div>
+
+<script>
+// تحديث عداد المستخدمين
+function updateCounter() {
+    let rows = document.querySelectorAll("#table tbody tr");
+    document.getElementById("totalCounter").innerText = "إجمالي المشتركين المميزين: " + rows.length;
+}
+
+// تحميل البيانات عند البدء
+window.onload = function(){
+    if(typeof specialUsers === "undefined"){
+        alert("❌ فشل في تحميل ملف المشتركين المميزين imad44.js");
+        return;
+    }
+
+    for(let user in specialUsers){
+        let real = specialUsers[user].real || "";
+        let note = specialUsers[user].note || "";
+        addRow(user, real, note);
+    }
+    updateCounter();
+};
+
+// إضافة صف جديد
+function addRow(user="", real="", note=""){
+    let table = document.querySelector("#table tbody");
+    let row = document.createElement("tr");
+
+    row.innerHTML = `
+        <td><input class="cell-input" style="direction: ltr; font-weight: 800; color: var(--primary);" value="${user}" placeholder="مثال: 50"></td>
+        <td><input class="cell-input" style="direction: ltr;" value="${real}" placeholder="كود مايكروتك السري"></td>
+        <td><input class="cell-input" value="${note}" placeholder="مثال: بقالة الأمل"></td>
+        <td style="text-align: center;"><button class="btn-del" onclick="removeRow(this)">✖</button></td>
+    `;
+
+    table.appendChild(row);
+    updateCounter();
+}
+
+// حذف صف مع تحديث العداد
+function removeRow(btn) {
+    btn.closest('tr').remove();
+    updateCounter();
+}
+
+// حفظ البيانات وتوليد ملف imad44.js
+function save(){
+    let rows = document.querySelectorAll("#table tbody tr");
+    let data = [];
+
+    rows.forEach((row) => {
+        let inputs = row.querySelectorAll("input");
+        let user = inputs[0].value.trim();
+        let real = inputs[1].value.trim();
+        let note = inputs[2].value.trim();
+
+        let safeNote = note.replace(/"/g, '\\"');
+
+        if(user && real){
+            data.push(`    "${user}": {real: "${real}", note: "${safeNote}"}`);
+        }
+    });
+
+    let js = "var specialUsers = {\n" 
+           + data.join(",\n") 
+           + "\n};";
+
+    let blob = new Blob(
+        ["\uFEFF" + js],
+        { type: "application/javascript;charset=utf-8" }
+    );
+
+    let url = URL.createObjectURL(blob);
+
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "imad44.js";
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+// البحث عن المشتركين
+function searchUser(value){
+    let rows = document.querySelectorAll("#table tbody tr");
+
+    rows.forEach(row=>{
+        let inputs = row.querySelectorAll("input");
+        let user = inputs[0].value.trim().toLowerCase();
+        let note = inputs[2].value.trim().toLowerCase();
+        let searchValue = value.toLowerCase();
+
+        if (user.includes(searchValue) || note.includes(searchValue)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+
+// 🔐 التحقق من كلمة المرور
+const PASSWORD = "12imad";
+
+function checkPass(){
+    let pass = document.getElementById("passInput").value;
+    let remember = document.getElementById("rememberMe").checked;
+
+    if(pass === PASSWORD){
+        // حفظ في الذاكرة المحلية إذا طلب ذلك
+        if(remember){
+            localStorage.setItem("savedPass", pass);
+        }else{
+            localStorage.removeItem("savedPass");
+        }
+
+        // إخفاء شاشة القفل بانتقال ناعم
+        let lockEl = document.getElementById("lockScreen");
+        lockEl.style.opacity = "0";
+        setTimeout(() => {
+            lockEl.style.display = "none";
+        }, 500);
+
+    }else{
+        alert("❌ كلمة المرور غير صحيحة، يرجى المحاولة مجدداً.");
+    }
+}
+
+// تسجيل دخول تلقائي إذا كانت كلمة المرور محفوظة مسبقاً
+window.addEventListener("load", function(){
+    let saved = localStorage.getItem("savedPass");
+    if(saved === PASSWORD){
+        document.getElementById("lockScreen").style.display = "none";
+    }
+});
+
+// دعم ضغط زر Enter لإرسال كلمة المرور
+document.addEventListener("keydown", function(e){
+    if(e.key === "Enter" && document.getElementById("lockScreen").style.display !== "none"){
+        checkPass();
+    }
+});
+</script>
+
+</body>
+</html>

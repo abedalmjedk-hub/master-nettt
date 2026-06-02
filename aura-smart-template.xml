@@ -1,0 +1,2139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html b:css='false' b:defaultmessages='true' b:layoutsVersion='3' b:responsive='true' dir='rtl' lang='ar' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+<head>
+  <meta charset='UTF-8'/>
+  <meta content='width=device-width, initial-scale=1, shrink-to-fit=no' name='viewport'/>
+  
+  <b:if cond='data:view.isMultipleItems'>
+    <title><data:blog.title/></title>
+  <b:else/>
+    <title><data:view.title/> - <data:blog.title/></title>
+  </b:if>
+
+  <!-- Advanced SEO Metas -->
+  <b:include data='blog' name='all-head-content'/>
+  <meta expr:content='data:blog.metaDescription' name='description'/>
+  <meta content='website' property='og:type'/>
+  <meta expr:content='data:view.title' property='og:title'/>
+  <meta expr:content='data:blog.metaDescription' property='og:description'/>
+  <meta expr:content='data:view.url' property='og:url'/>
+  <meta expr:content='data:blog.title' property='og:site_name'/>
+  <b:if cond='data:view.featuredImage'>
+    <meta expr:content='data:view.featuredImage' property='og:image'/>
+  </b:if>
+
+  <!-- Modern Fonts -->
+  <link href='https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&amp;family=Inter:wght@300;400;500;600;700;800&amp;display=swap' rel='stylesheet'/>
+  <!-- Icons -->
+  <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css' rel='stylesheet'/>
+
+  <b:skin><![CDATA[
+  /*
+  Theme Name: Aura Smart Blog
+  Author: Antigravity AI (Google DeepMind Team)
+  Version: 1.0.0
+  Description: A premium, smart, contemporary Blogger template with smooth glassmorphism, native dark/light mode toggle, dynamic scroll indicator, progress bar, and exquisite Arabic typography.
+  */
+
+  /* CSS Variable Definitions */
+  :root {
+    --primary: #6366f1;
+    --primary-rgb: 99, 102, 241;
+    --primary-hover: #4f46e5;
+    --accent: #ec4899;
+    --accent-rgb: 236, 72, 153;
+    
+    /* Colors - Light Mode */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f1f5f9;
+    --bg-glass: rgba(255, 255, 255, 0.75);
+    --border-color: rgba(226, 232, 240, 0.8);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(99, 102, 241, 0.05), 0 4px 6px -4px rgba(99, 102, 241, 0.05);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+    
+    --glass-blur: 16px;
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-full: 9999px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  [data-theme="dark"] {
+    /* Colors - Dark Mode */
+    --bg-primary: #090d16;
+    --bg-secondary: #121824;
+    --bg-tertiary: #1b2336;
+    --bg-glass: rgba(18, 24, 36, 0.8);
+    --border-color: rgba(38, 52, 78, 0.6);
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  /* Reset & Global */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+  }
+  
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-secondary);
+    font-family: 'Cairo', 'Inter', sans-serif;
+    line-height: 1.6;
+    transition: background-color 0.4s ease, color 0.4s ease;
+    overflow-x: hidden;
+  }
+  
+  a {
+    color: inherit;
+    text-decoration: none;
+    transition: var(--transition);
+  }
+  
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  button, input, select, textarea {
+    font-family: inherit;
+    background: none;
+    border: none;
+    outline: none;
+  }
+
+  /* Layout Containers */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+    width: 100%;
+  }
+
+  /* Premium Glass Header */
+  .aura-header-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    background: var(--bg-glass);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid var(--border-color);
+    transition: var(--transition);
+  }
+  
+  .aura-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 76px;
+  }
+  
+  .logo-area a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  
+  .logo-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: var(--radius-full);
+    display: inline-block;
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  /* Navigation Bar */
+  .main-nav {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+  
+  .nav-list {
+    display: flex;
+    list-style: none;
+    gap: 28px;
+  }
+  
+  .nav-item {
+    position: relative;
+  }
+  
+  .nav-link {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .nav-link:hover, .nav-item.active .nav-link {
+    color: var(--primary);
+  }
+  
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: var(--radius-full);
+    transition: var(--transition);
+  }
+  
+  .nav-link:hover::after, .nav-item.active .nav-link::after {
+    width: 100%;
+  }
+
+  /* Interactive Controls */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .action-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    position: relative;
+    transition: var(--transition);
+  }
+  
+  .action-btn:hover {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
+    transform: translateY(-2px);
+  }
+
+  /* Hamburger Menu for Mobile */
+  .mobile-menu-trigger {
+    display: none;
+  }
+
+  /* Off-canvas mobile menu */
+  .offcanvas-menu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 300px;
+    height: 100vh;
+    background: var(--bg-secondary);
+    z-index: 1000;
+    padding: 30px;
+    box-shadow: var(--shadow-lg);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    transition: right 0.4s cubic-bezier(0.77,0.2,0.05,1.0);
+  }
+  
+  .offcanvas-menu.active {
+    right: 0;
+  }
+  
+  .offcanvas-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .offcanvas-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .offcanvas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .offcanvas-close {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+  
+  .offcanvas-nav {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .offcanvas-link {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    display: block;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .offcanvas-link:hover {
+    color: var(--primary);
+    padding-right: 10px;
+  }
+
+  /* Reading Progress Bar */
+  .reading-progress-container {
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: transparent;
+  }
+  
+  .reading-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 0 var(--radius-full) var(--radius-full) 0;
+    transition: width 0.1s ease-out;
+  }
+
+  /* Dynamic Search Overlay */
+  .search-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(9, 13, 22, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .search-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .search-modal-content {
+    width: 90%;
+    max-width: 650px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    position: relative;
+    box-shadow: var(--shadow-lg);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .search-modal.active .search-modal-content {
+    transform: scale(1);
+  }
+  
+  .search-close-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  
+  .search-form {
+    display: flex;
+    align-items: center;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 6px 16px;
+    margin-top: 20px;
+    transition: var(--transition);
+  }
+  
+  .search-form:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  }
+  
+  .search-input {
+    flex: 1;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    padding: 10px 0;
+  }
+  
+  .search-submit-btn {
+    color: var(--primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+
+  /* Hero Section (Featured slider) */
+  .aura-hero-section {
+    margin-top: 40px;
+    margin-bottom: 50px;
+  }
+  
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+  }
+  
+  .hero-card {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    height: 480px;
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .hero-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.8s ease;
+  }
+  
+  .hero-card:hover .hero-card-img {
+    transform: scale(1.05);
+  }
+  
+  .hero-card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(9, 13, 22, 0.9) 10%, rgba(9, 13, 22, 0.4) 50%, transparent 100%);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 16px;
+  }
+  
+  .hero-badge {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #ffffff;
+    padding: 6px 16px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: 0.8rem;
+    align-self: flex-start;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+  }
+  
+  .hero-title {
+    color: #ffffff;
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+  
+  .hero-title a:hover {
+    color: var(--primary);
+  }
+  
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  .hero-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .hero-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .hero-aside-card {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    height: 228px;
+    box-shadow: var(--shadow-md);
+  }
+  
+  .hero-aside-card .hero-card-img {
+    height: 100%;
+  }
+  
+  .hero-aside-card .hero-card-overlay {
+    padding: 24px;
+    gap: 10px;
+  }
+  
+  .hero-aside-card .hero-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  /* Main & Sidebar Layout */
+  .main-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    margin-bottom: 80px;
+  }
+  
+  @media(min-width: 1024px) {
+    .main-wrapper {
+      grid-template-columns: 2.3fr 1fr;
+    }
+  }
+  
+  .aura-content-area {
+    min-width: 0;
+  }
+
+  /* Post Grid & Cards */
+  .posts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  @media(min-width: 640px) {
+    .posts-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  .post-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+  }
+  
+  .post-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+  
+  .post-card-thumb-wrap {
+    position: relative;
+    aspect-ratio: 16/10;
+    overflow: hidden;
+    background: var(--bg-tertiary);
+  }
+  
+  .post-card-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .post-card:hover .post-card-thumb {
+    transform: scale(1.05);
+  }
+  
+  .post-card-category {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: var(--bg-secondary);
+    color: var(--primary);
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    font-size: 0.78rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+  }
+  
+  .post-card:hover .post-card-category {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+  }
+  
+  .post-card-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 14px;
+  }
+  
+  .post-card-title {
+    font-size: 1.28rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text-primary);
+  }
+  
+  .post-card-title a:hover {
+    color: var(--primary);
+  }
+  
+  .post-card-excerpt {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.6;
+  }
+  
+  .post-card-meta {
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  
+  .post-card-author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  
+  .post-card-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 1.5px solid var(--primary);
+  }
+  
+  .post-card-readtime {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Single Post Page Details */
+  .article-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 30px;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  @media(min-width: 768px) {
+    .article-container {
+      padding: 45px;
+    }
+  }
+  
+  .article-header {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .article-category {
+    align-self: flex-start;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    padding: 6px 16px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  
+  .article-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.3;
+    color: var(--text-primary);
+  }
+  
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  
+  .article-author-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  
+  .article-author-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--primary);
+  }
+  
+  .article-featured-img {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 35px;
+    box-shadow: var(--shadow-md);
+  }
+  
+  .article-body {
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    line-height: 1.85;
+    text-align: justify;
+  }
+  
+  .article-body p {
+    margin-bottom: 24px;
+  }
+  
+  .article-body h2, .article-body h3, .article-body h4 {
+    color: var(--text-primary);
+    font-weight: 700;
+    margin: 40px 0 20px 0;
+  }
+  
+  .article-body h2 { font-size: 1.75rem; border-right: 4px solid var(--primary); padding-right: 15px; }
+  .article-body h3 { font-size: 1.45rem; }
+  
+  .article-body blockquote {
+    background: var(--bg-tertiary);
+    border-right: 4px solid var(--accent);
+    padding: 20px 30px;
+    border-radius: var(--radius-md);
+    margin: 30px 0;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  /* Responsive Embedded Content */
+  .article-body iframe, .article-body embed, .article-body video {
+    max-width: 100%;
+    border-radius: var(--radius-md);
+    margin: 20px 0;
+  }
+
+  /* Modern Alert Box in Content */
+  .article-alert {
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+    border-radius: var(--radius-md);
+    margin: 24px 0;
+    border-right: 4px solid transparent;
+  }
+  
+  .article-alert-info {
+    background: rgba(99, 102, 241, 0.08);
+    border-color: var(--primary);
+    color: var(--text-secondary);
+  }
+  
+  .article-alert-icon {
+    font-size: 1.3rem;
+    color: var(--primary);
+  }
+
+  /* Float Share Box */
+  .article-footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .tag-link {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: var(--radius-md);
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  
+  .tag-link:hover {
+    background: var(--primary);
+    color: #ffffff;
+  }
+  
+  .share-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  
+  .share-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+  }
+  
+  .share-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    color: #ffffff;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .share-btn.fb { background: #3b5998; }
+  .share-btn.tw { background: #1da1f2; }
+  .share-btn.wa { background: #25d366; }
+  .share-btn.pin { background: #bd081c; }
+  .share-btn.copy { background: var(--text-muted); }
+  
+  .share-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    filter: brightness(1.1);
+  }
+
+  /* Dynamic Author Box */
+  .author-box {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+    padding: 30px;
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    border: 1px solid var(--border-color);
+  }
+  
+  @media(min-width: 640px) {
+    .author-box {
+      flex-direction: row;
+      text-align: right;
+      align-items: flex-start;
+    }
+  }
+  
+  .author-box-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: var(--radius-full);
+    border: 3px solid var(--primary);
+    object-fit: cover;
+  }
+  
+  .author-box-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+  
+  .author-box-name {
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+  }
+  
+  .author-box-bio {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  
+  .author-box-socials {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  
+  .author-box-social {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+  }
+  
+  .author-box-social:hover {
+    color: var(--primary);
+  }
+
+  /* Comments Container */
+  .comments-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 30px;
+    margin-top: 45px;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .comments-title {
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: var(--text-primary);
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .comments-title i {
+    color: var(--accent);
+  }
+
+  /* Pagination */
+  .pagination-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 50px;
+  }
+  
+  .page-link-btn {
+    padding: 10px 24px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    color: var(--text-primary);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .page-link-btn:hover {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Sidebar Design */
+  .aura-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  
+  .sidebar-widget {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .widget-title {
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border-color);
+    position: relative;
+  }
+  
+  .widget-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    right: 0;
+    width: 50px;
+    height: 2px;
+    background: var(--primary);
+    border-radius: var(--radius-full);
+  }
+
+  /* Sidebar Profile Widget */
+  .profile-widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 18px;
+  }
+  
+  .profile-bg {
+    width: 100%;
+    height: 90px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border-radius: var(--radius-md);
+    position: relative;
+    margin-bottom: 40px;
+  }
+  
+  .profile-avatar-wrap {
+    position: absolute;
+    bottom: -35px;
+    right: 50%;
+    transform: translateX(50%);
+  }
+  
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-full);
+    border: 4px solid var(--bg-secondary);
+    object-fit: cover;
+    box-shadow: var(--shadow-md);
+  }
+  
+  .profile-name {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+  }
+  
+  .profile-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* Sidebar Newsletter Widget */
+  .newsletter-widget-card {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(236, 72, 153, 0.05));
+    border: 1px solid rgba(99, 102, 241, 0.15);
+  }
+  
+  .newsletter-desc {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+  }
+  
+  .newsletter-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .newsletter-input {
+    width: 100%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 12px 18px;
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 0.92rem;
+    transition: var(--transition);
+  }
+  
+  .newsletter-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+  
+  .newsletter-submit {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #ffffff;
+    font-weight: 700;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  }
+  
+  .newsletter-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.3);
+  }
+
+  /* Popular Posts Widget Styling */
+  .popular-posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    list-style: none;
+  }
+  
+  .popular-post-item {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    position: relative;
+  }
+  
+  .popular-post-num {
+    font-size: 1.8rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0.3;
+    width: 40px;
+    flex-shrink: 0;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .popular-post-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .popular-post-title {
+    font-weight: 700;
+    font-size: 0.98rem;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+  
+  .popular-post-title a:hover {
+    color: var(--primary);
+  }
+  
+  .popular-post-meta {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  /* Social Counter Grid Widget */
+  .social-counters-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .social-counter-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    border-radius: var(--radius-md);
+    color: #ffffff;
+    gap: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .social-counter-item.fb { background: #3b5998; }
+  .social-counter-item.tw { background: #1da1f2; }
+  .social-counter-item.yt { background: #ff0000; }
+  .social-counter-item.ig { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+  
+  .social-counter-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    filter: brightness(1.05);
+  }
+  
+  .social-counter-icon {
+    font-size: 1.5rem;
+  }
+  
+  .social-counter-count {
+    font-size: 0.85rem;
+    opacity: 0.9;
+  }
+
+  /* Footer Design */
+  .aura-footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    padding: 60px 0 20px 0;
+    color: var(--text-secondary);
+    transition: var(--transition);
+  }
+  
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    margin-bottom: 50px;
+  }
+  
+  @media(min-width: 768px) {
+    .footer-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .footer-logo a {
+    font-weight: 900;
+    font-size: 1.6rem;
+    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .footer-desc {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+  }
+  
+  .footer-title {
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-color);
+    position: relative;
+  }
+  
+  .footer-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    right: 0;
+    width: 40px;
+    height: 2px;
+    background: var(--accent);
+  }
+  
+  .footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .footer-links-item a {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+  }
+  
+  .footer-links-item a:hover {
+    color: var(--primary);
+    padding-right: 8px;
+  }
+  
+  .footer-bottom {
+    border-top: 1px solid var(--border-color);
+    padding-top: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+  }
+  
+  @media(min-width: 640px) {
+    .footer-bottom {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
+  
+  .footer-credits span {
+    color: var(--accent);
+    animation: pulse 1.5s infinite;
+    display: inline-block;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+
+  /* Floating Scroll & Tool Elements */
+  .floating-tools {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 99;
+  }
+  
+  .floating-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    transition: var(--transition);
+  }
+  
+  .floating-btn:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  
+  .back-to-top-btn {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8);
+  }
+  
+  .back-to-top-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+  }
+  
+  .scroll-progress-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .scroll-progress-ring circle {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 2.5;
+    stroke-dasharray: 144;
+    stroke-dashoffset: 144;
+    transition: stroke-dashoffset 0.1s linear;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+  }
+
+  /* Custom Custom Toast Notification */
+  .aura-toast {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 14px 28px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+  }
+  
+  .aura-toast.active {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  
+  .aura-toast-icon {
+    color: var(--primary);
+    font-size: 1.2rem;
+  }
+
+  /* RTL Specific Helpers */
+  .rtl-flip {
+    transform: scaleX(-1);
+  }
+
+  /* Responsive Display Rules */
+  @media(max-width: 1023px) {
+    .main-nav {
+      display: none;
+    }
+    .mobile-menu-trigger {
+      display: flex;
+    }
+    .hero-grid {
+      grid-template-columns: 1fr;
+    }
+    .hero-card {
+      height: 380px;
+    }
+    .hero-aside {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .hero-aside-card {
+      height: 200px;
+    }
+  }
+  
+  @media(max-width: 639px) {
+    .hero-aside {
+      grid-template-columns: 1fr;
+    }
+    .hero-card {
+      height: 320px;
+    }
+    .hero-title {
+      font-size: 1.6rem;
+    }
+  }
+  ]]></b:skin>
+
+  <!-- Script to run instantly before rendering to prevent theme flash -->
+  <script type='text/javascript'>
+    //<![CDATA[
+    (function() {
+      const savedTheme = localStorage.getItem('aura-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+    //]]>
+  </script>
+</head>
+<body>
+
+  <!-- Floating Controls & Toolbar -->
+  <div class='floating-tools'>
+    <!-- Back To Top Button with Circular Progress Ring -->
+    <div class='floating-btn back-to-top-btn' id='backToTopBtn' role='button' title='الرجوع للأعلى'>
+      <svg class='scroll-progress-ring' viewBox='0 0 50 50'>
+        <circle cx='25' cy='25' r='23'/>
+      </svg>
+      <i class='fa-solid fa-arrow-up'/>
+    </div>
+    
+    <!-- Theme Toggle Floating Control -->
+    <div class='floating-btn' id='themeToggleBtn' role='button' title='تبديل المظهر'>
+      <i class='fa-solid fa-moon' id='themeToggleIcon'/>
+    </div>
+  </div>
+
+  <!-- Offcanvas Mobile Drawer Menu -->
+  <div class='offcanvas-overlay' id='offcanvasOverlay'/>
+  <aside class='offcanvas-menu' id='offcanvasMenu'>
+    <div class='offcanvas-header'>
+      <div class='logo-area'>
+        <a href='/'>أورا<span class='logo-dot'/></a>
+      </div>
+      <div class='offcanvas-close' id='offcanvasClose' role='button'>
+        <i class='fa-solid fa-xmark'/>
+      </div>
+    </div>
+    
+    <b:section id='mobile-nav-section' showaddelement='yes'>
+      <b:widget id='LinkList101' locked='false' title='القائمة الجانبية للهاتف' type='LinkList'>
+        <b:includable id='main'>
+          <nav class='offcanvas-nav-wrap'>
+            <ul class='offcanvas-nav'>
+              <b:loop values='data:links' var='link'>
+                <li>
+                  <a class='offcanvas-link' expr:href='data:link.target'><data:link.name/></a>
+                </li>
+              </b:loop>
+            </ul>
+          </nav>
+        </b:includable>
+      </b:widget>
+    </b:section>
+  </aside>
+
+  <!-- Search Modal Overlay -->
+  <div class='search-modal' id='searchModal'>
+    <div class='search-modal-content'>
+      <div class='search-close-btn' id='searchCloseBtn' role='button'>
+        <i class='fa-solid fa-xmark'/>
+      </div>
+      <h3 style='font-weight: 800; color: var(--text-primary); text-align: center; margin-bottom: 10px;'>ابحث في المدونة</h3>
+      <p style='color: var(--text-secondary); text-align: center; font-size: 0.9rem;'>اكتب كلمة بحثية للعثور على المقالات المناسبة</p>
+      
+      <form action='/search' class='search-form' method='get'>
+        <input class='search-input' name='q' placeholder='ما الذي تبحث عنه؟...' type='text'/>
+        <button class='search-submit-btn' type='submit'>
+          <i class='fa-solid fa-magnifying-glass'/>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Website Wrapper -->
+  <div class='aura-wrapper'>
+    
+    <!-- Premium Header -->
+    <header class='aura-header-wrap'>
+      <div class='container aura-header'>
+        
+        <!-- Hamburger Menu Button -->
+        <button class='action-btn mobile-menu-trigger' id='mobileMenuTrigger' title='القائمة'>
+          <i class='fa-solid fa-bars'/>
+        </button>
+
+        <!-- Logo -->
+        <div class='logo-area'>
+          <a href='/'>أورا<span class='logo-dot'/></a>
+        </div>
+
+        <!-- Main Desktop Navigation -->
+        <b:section id='desktop-nav-section' maxwidgets='1' showaddelement='yes'>
+          <b:widget id='LinkList100' locked='false' title='قائمة التنقل الرئيسية' type='LinkList'>
+            <b:includable id='main'>
+              <nav class='main-nav'>
+                <ul class='nav-list'>
+                  <b:loop values='data:links' var='link'>
+                    <li class='nav-item'>
+                      <a class='nav-link' expr:href='data:link.target'><data:link.name/></a>
+                    </li>
+                  </b:loop>
+                </ul>
+              </nav>
+            </b:includable>
+          </b:widget>
+        </b:section>
+
+        <!-- Right Header Actions -->
+        <div class='header-actions'>
+          <button class='action-btn' id='searchOpenBtn' title='البحث'>
+            <i class='fa-solid fa-magnifying-glass'/>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Linear Reading Progress Bar (only shown on articles) -->
+      <b:if cond='data:view.isPost'>
+        <div class='reading-progress-container'>
+          <div class='reading-progress-bar' id='readingProgressBar'/>
+        </div>
+      </b:if>
+    </header>
+
+    <!-- Contemporary Hero/Featured Grid Section (Only on Homepage) -->
+    <b:if cond='data:view.isHomepage'>
+      <section class='container aura-hero-section'>
+        <div class='hero-grid'>
+          
+          <!-- Primary Featured Large Slide -->
+          <div class='hero-card'>
+            <img class='hero-card-img' src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&amp;w=1200&amp;auto=format&amp;fit=crop' alt='Featured Post'/>
+            <div class='hero-card-overlay'>
+              <span class='hero-badge'>تقنية</span>
+              <h2 class='hero-title'>
+                <a href='#'>تصميم وتجربة المستخدم المستقبيلية: دمج الذكاء الاصطناعي مع الواجهات الزجاجية</a>
+              </h2>
+              <div class='hero-meta'>
+                <div class='hero-meta-item'>
+                  <i class='fa-solid fa-user'/>
+                  <span>عماد الدين</span>
+                </div>
+                <div class='hero-meta-item'>
+                  <i class='fa-solid fa-calendar-days'/>
+                  <span>22 مايو 2026</span>
+                </div>
+                <div class='hero-meta-item'>
+                  <i class='fa-solid fa-clock'/>
+                  <span>6 دقائق قراءة</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Secondary Grid Sidebar Slides -->
+          <div class='hero-aside'>
+            
+            <div class='hero-aside-card'>
+              <img class='hero-card-img' src='https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&amp;w=600&amp;auto=format&amp;fit=crop' alt='Featured Post 2'/>
+              <div class='hero-card-overlay'>
+                <span class='hero-badge' style='background: linear-gradient(135deg, #06b6d4, #3b82f6);'>أمن معلومات</span>
+                <h3 class='hero-title'>
+                  <a href='#'>أفضل ممارسات الأمن السيبراني لحماية مدونتك وقواعد بياناتك الشخصية</a>
+                </h3>
+              </div>
+            </div>
+
+            <div class='hero-aside-card'>
+              <img class='hero-card-img' src='https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?q=80&amp;w=600&amp;auto=format&amp;fit=crop' alt='Featured Post 3'/>
+              <div class='hero-card-overlay'>
+                <span class='hero-badge' style='background: linear-gradient(135deg, #84cc16, #22c55e);'>تصميم</span>
+                <h3 class='hero-title'>
+                  <a href='#'>كيف تصنع هوية بصرية مذهلة تجذب الزوار لعلامتك التجارية الفاخرة</a>
+                </h3>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+    </b:if>
+
+    <!-- Main Container -->
+    <main class='container main-wrapper'>
+      
+      <!-- Content Area -->
+      <section class='aura-content-area'>
+        
+        <b:section id='main' maxwidgets='1' showaddelement='no'>
+          <b:widget id='Blog1' locked='true' title='رسائل المدونة الإلكترونية' type='Blog'>
+            
+            <b:includable id='main'>
+              <!-- Post feed lists -->
+              <b:if cond='data:view.isMultipleItems'>
+                
+                <div class='posts-grid'>
+                  <b:loop values='data:posts' var='post'>
+                    <article class='post-card'>
+                      <!-- Post Thumbnail Wrap -->
+                      <a class='post-card-thumb-wrap' expr:href='data:post.url'>
+                        <b:if cond='data:post.featuredImage'>
+                          <img class='post-card-thumb' expr:alt='data:post.title' expr:src='data:post.featuredImage'/>
+                        <b:else/>
+                          <img class='post-card-thumb' expr:alt='data:post.title' src='https://images.unsplash.com/photo-1557683316-973673baf926?q=80&amp;w=600&amp;auto=format&amp;fit=crop'/>
+                        </b:if>
+                        
+                        <b:if cond='data:post.labels'>
+                          <b:loop index='i' values='data:post.labels' var='label'>
+                            <b:if cond='data:i == 0'>
+                              <span class='post-card-category'><data:label.name/></span>
+                            </b:if>
+                          </b:loop>
+                        <b:else/>
+                          <span class='post-card-category'>عام</span>
+                        </b:if>
+                      </a>
+                      
+                      <!-- Post Details -->
+                      <div class='post-card-content'>
+                        <h2 class='post-card-title'>
+                          <a expr:href='data:post.url'><data:post.title/></a>
+                        </h2>
+                        
+                        <p class='post-card-excerpt'>
+                          <b:if cond='data:post.snippet'><data:post.snippet/><b:else/>لمحة موجزة عن المقال المفصل، يرجى النقر على قراءة المزيد لاستعراض محتويات التدوينة الكاملة والاستمتاع بالتفاصيل...</b:if>
+                        </p>
+                        
+                        <!-- Post Meta Info -->
+                        <div class='post-card-meta'>
+                          <div class='post-card-author'>
+                            <img class='post-card-avatar' expr:alt='data:post.author.name' expr:src='data:post.author.authorPhoto.image'/>
+                            <span><data:post.author.name/></span>
+                          </div>
+                          
+                          <div class='post-card-readtime'>
+                            <i class='fa-regular fa-clock'/>
+                            <span>4 دقائق قراءة</span>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  </b:loop>
+                </div>
+
+                <!-- Custom Pagination -->
+                <b:if cond='data:newerPageUrl or data:olderPageUrl'>
+                  <div class='pagination-container'>
+                    <b:if cond='data:newerPageUrl'>
+                      <a class='page-link-btn' expr:href='data:newerPageUrl'>أحدث المقالات</a>
+                    </b:if>
+                    <b:if cond='data:olderPageUrl'>
+                      <a class='page-link-btn' expr:href='data:olderPageUrl'>أقدم المقالات</a>
+                    </b:if>
+                  </div>
+                </b:if>
+
+              <!-- Single Post & Custom styled details -->
+              <b:else/>
+                <b:loop values='data:posts' var='post'>
+                  <article class='article-container'>
+                    
+                    <header class='article-header'>
+                      <b:if cond='data:post.labels'>
+                        <div class='article-tags'>
+                          <b:loop values='data:post.labels' var='label'>
+                            <span class='article-category'><data:label.name/></span>
+                          </b:loop>
+                        </div>
+                      </b:if>
+                      
+                      <h1 class='article-title'><data:post.title/></h1>
+                      
+                      <div class='article-meta'>
+                        <div class='article-author-info'>
+                          <img class='article-author-avatar' expr:src='data:post.author.authorPhoto.image'/>
+                          <span><data:post.author.name/></span>
+                        </div>
+                        <div>
+                          <i class='fa-regular fa-calendar-days' style='margin-left: 6px;'/>
+                          <span><data:post.dateHeader/></span>
+                        </div>
+                        <div>
+                          <i class='fa-regular fa-clock' style='margin-left: 6px;'/>
+                          <span>قراءة مستفيضة</span>
+                        </div>
+                      </div>
+                    </header>
+
+                    <!-- Article Featured Image -->
+                    <b:if cond='data:post.featuredImage'>
+                      <div class='article-featured-img'>
+                        <img expr:alt='data:post.title' expr:src='data:post.featuredImage' style='width:100%; object-fit:cover; aspect-ratio:16/9;'/>
+                      </div>
+                    </b:if>
+
+                    <!-- Main Core Content Body -->
+                    <div class='article-body entry-content' id='postBody'>
+                      <data:post.body/>
+                      
+                      <!-- Beautiful Dynamic Mock Info block -->
+                      <div class='article-alert article-alert-info'>
+                        <div class='article-alert-icon'>
+                          <i class='fa-solid fa-circle-info'/>
+                        </div>
+                        <div>
+                          <strong>نصيحة تقنية متميزة:</strong> يمكنك مشاركة هذا المقال مع أصدقائك عبر المنصات الاجتماعية بضغطة زر واحدة باستخدام شريط المشاركة الأنيق الموجود في الأسفل.
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Article Footer Actions (Tags & Share) -->
+                    <div class='article-footer-actions'>
+                      
+                      <div class='share-box'>
+                        <span class='share-title'>مشاركة المقال:</span>
+                        
+                        <a class='share-btn fb' expr:href='&quot;https://www.facebook.com/sharer/sharer.php?u=&quot; + data:post.url' target='_blank' title='فيسبوك'>
+                          <i class='fa-brands fa-facebook-f'/>
+                        </a>
+                        
+                        <a class='share-btn tw' expr:href='&quot;https://twitter.com/intent/tweet?url=&quot; + data:post.url + &quot;&amp;text=&quot; + data:post.title' target='_blank' title='تويتر'>
+                          <i class='fa-brands fa-twitter'/>
+                        </a>
+                        
+                        <a class='share-btn wa' expr:href='&quot;https://api.whatsapp.com/send?text=&quot; + data:post.title + &quot;%20&quot; + data:post.url' target='_blank' title='واتساب'>
+                          <i class='fa-brands fa-whatsapp'/>
+                        </a>
+                        
+                        <a class='share-btn pin' expr:href='&quot;https://pinterest.com/pin/create/button/?url=&quot; + data:post.url' target='_blank' title='بنتريست'>
+                          <i class='fa-brands fa-pinterest-p'/>
+                        </a>
+                        
+                        <div class='share-btn copy' id='copyLinkBtn' role='button' title='نسخ الرابط'>
+                          <i class='fa-regular fa-copy'/>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Custom Professional Author box -->
+                    <div class='author-box'>
+                      <img class='author-box-avatar' expr:alt='data:post.author.name' expr:src='data:post.author.authorPhoto.image'/>
+                      <div class='author-box-content'>
+                        <h4 class='author-box-name'><data:post.author.name/></h4>
+                        <p class='author-box-bio'>كاتب تقني وصانع محتوى مهتم بالتصميم المعاصر والبرمجة وحلول الذكاء الاصطناعي وتطوير واجهات المستخدم الراقية.</p>
+                        <div class='author-box-socials'>
+                          <a class='author-box-social' href='#'><i class='fa-brands fa-facebook'/></a>
+                          <a class='author-box-social' href='#'><i class='fa-brands fa-twitter'/></a>
+                          <a class='author-box-social' href='#'><i class='fa-brands fa-linkedin'/></a>
+                          <a class='author-box-social' href='#'><i class='fa-brands fa-github'/></a>
+                        </div>
+                      </div>
+                    </div>
+
+                  </article>
+
+                  <!-- Dynamic Comments Section -->
+                  <div class='comments-container'>
+                    <h3 class='comments-title'>
+                      <i class='fa-solid fa-comments'/>
+                      <span>التعليقات المناقشة</span>
+                    </h3>
+                    <b:include data='post' name='threaded_comments'/>
+                  </div>
+                </b:loop>
+              </b:if>
+            </b:includable>
+            
+          </b:widget>
+        </b:section>
+
+      </section>
+
+      <!-- Sidebar -->
+      <aside class='aura-sidebar'>
+        
+        <b:section id='sidebar' showaddelement='yes'>
+          
+          <!-- Elegant Profile Card Widget -->
+          <b:widget id='HTML1' locked='false' title='ملف الكاتب الشخصي' type='HTML'>
+            <b:includable id='main'>
+              <div class='sidebar-widget'>
+                <h3 class='widget-title'><data:title/></h3>
+                <div class='profile-widget'>
+                  <div class='profile-bg'>
+                    <div class='profile-avatar-wrap'>
+                      <img class='profile-avatar' src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&amp;w=250&amp;auto=format&amp;fit=crop' alt='Avatar'/>
+                    </div>
+                  </div>
+                  <h4 class='profile-name'>عماد الدين بن عمر</h4>
+                  <p class='profile-desc'>مؤسس المدونة، مهتم بالأفكار والمشاريع العصرية، تقنيات البرمجيات وحلول الويب المستدامة والذكية.</p>
+                </div>
+              </div>
+            </b:includable>
+          </b:widget>
+
+          <!-- Popular Posts with custom counters -->
+          <b:widget id='PopularPosts1' locked='false' title='المقالات الأكثر قراءة' type='PopularPosts'>
+            <b:includable id='main'>
+              <div class='sidebar-widget'>
+                <h3 class='widget-title'><data:title/></h3>
+                <ul class='popular-posts-list'>
+                  <b:loop index='i' values='data:posts' var='post'>
+                    <li class='popular-post-item'>
+                      <span class='popular-post-num'>
+                        <b:if cond='data:i + 1 &lt; 10'>0<data:i + 1/><b:else/><data:i + 1/></b:if>
+                      </span>
+                      <div class='popular-post-details'>
+                        <h4 class='popular-post-title'>
+                          <a expr:href='data:post.href'><data:post.title/></a>
+                        </h4>
+                        <span class='popular-post-meta'>أكثر من 10k مشاهدة</span>
+                      </div>
+                    </li>
+                  </b:loop>
+                </ul>
+              </div>
+            </b:includable>
+          </b:widget>
+
+          <!-- Sleek Newsletter Card -->
+          <b:widget id='HTML2' locked='false' title='النشرة البريدية الذكية' type='HTML'>
+            <b:includable id='main'>
+              <div class='sidebar-widget newsletter-widget-card'>
+                <h3 class='widget-title'><data:title/></h3>
+                <p class='newsletter-desc'>اشترك معنا لتصلك أحدث المقالات التقنية والتصاميم الراقية مباشرة في بريدك الإلكتروني.</p>
+                <form class='newsletter-form' onsubmit='event.preventDefault(); alert("شكرًا لاشتراكك في نشرة أورا البريدية!");'>
+                  <input class='newsletter-input' placeholder='بريدك الإلكتروني المفضل...' required='required' type='email'/>
+                  <button class='newsletter-submit' type='submit'>انضم الآن لقائمتنا</button>
+                </form>
+              </div>
+            </b:includable>
+          </b:widget>
+
+          <!-- Beautiful Social Follow grid -->
+          <b:widget id='HTML3' locked='false' title='تابعنا على شبكاتنا' type='HTML'>
+            <b:includable id='main'>
+              <div class='sidebar-widget'>
+                <h3 class='widget-title'><data:title/></h3>
+                <div class='social-counters-grid'>
+                  
+                  <a class='social-counter-item fb' href='#'>
+                    <i class='fa-brands fa-facebook-f social-counter-icon'/>
+                    <span>فيسبوك</span>
+                    <span class='social-counter-count'>45k متابع</span>
+                  </a>
+
+                  <a class='social-counter-item tw' href='#'>
+                    <i class='fa-brands fa-twitter social-counter-icon'/>
+                    <span>تويتر</span>
+                    <span class='social-counter-count'>28k متابع</span>
+                  </a>
+
+                  <a class='social-counter-item yt' href='#'>
+                    <i class='fa-brands fa-youtube social-counter-icon'/>
+                    <span>يوتيوب</span>
+                    <span class='social-counter-count'>100k مشترك</span>
+                  </a>
+
+                  <a class='social-counter-item ig' href='#'>
+                    <i class='fa-brands fa-instagram social-counter-icon'/>
+                    <span>انستغرام</span>
+                    <span class='social-counter-count'>62k متابع</span>
+                  </a>
+
+                </div>
+              </div>
+            </b:includable>
+          </b:widget>
+
+        </b:section>
+
+      </aside>
+
+    </main>
+
+    <!-- Contemporary Footer -->
+    <footer class='aura-footer'>
+      <div class='container'>
+        <div class='footer-grid'>
+          
+          <!-- Column 1: Info -->
+          <div class='footer-col'>
+            <div class='footer-logo'>
+              <a href='/'>أورا<span class='logo-dot'/></a>
+            </div>
+            <p class='footer-desc'>قالب بلوجر راقي بتصميم ذكي ومعاصر يوفر تجربة قراءة استثنائية للزوار، مصمم بأحدث التقنيات وأسرعها ليتناسب مع تطلعات صانعي المحتوى المعاصرين.</p>
+          </div>
+
+          <!-- Column 2: Links -->
+          <div class='footer-col'>
+            <h3 class='footer-title'>أقسام رئيسية</h3>
+            <ul class='footer-links'>
+              <li class='footer-links-item'><a href='#'>مقالات تقنية ونمذجة</a></li>
+              <li class='footer-links-item'><a href='#'>نصائح تجربة المستخدم</a></li>
+              <li class='footer-links-item'><a href='#'>أمن المعلومات والخصوصية</a></li>
+              <li class='footer-links-item'><a href='#'>منصات ريادة الأعمال الرقمية</a></li>
+            </ul>
+          </div>
+
+          <!-- Column 3: Custom Widget/About -->
+          <div class='footer-col'>
+            <h3 class='footer-title'>حول أورا</h3>
+            <p class='footer-desc'>نهتم بالتفاصيل الصغيرة التي تصنع الفروقات الكبيرة، القالب مجهز بالكامل لمحركات البحث الفائقة لرفع كفاءة تدويناتك وتصدر النتائج الأولى بامتياز.</p>
+          </div>
+
+        </div>
+
+        <!-- Copyright Info -->
+        <div class='footer-bottom'>
+          <div class='footer-copy'>جميع الحقوق محفوظة © 2026 لمدونة أورا الذكية.</div>
+          <div class='footer-credits'>صمم بكل شغف و <span>❤️</span> بواسطة الذكاء الاصطناعي</div>
+        </div>
+
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- custom dynamic Toast Notify element -->
+  <div class='aura-toast' id='copyToast'>
+    <i class='fa-solid fa-circle-check aura-toast-icon'/>
+    <span>تم نسخ رابط المقال بنجاح!</span>
+  </div>
+
+  <!-- Interactive JavaScript Engine -->
+  <script type='text/javascript'>
+    //<![CDATA[
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      // Theme Switcher core Logic
+      const themeToggleBtn = document.getElementById('themeToggleBtn');
+      const themeToggleIcon = document.getElementById('themeToggleIcon');
+      
+      function updateToggleIcon(theme) {
+        if(theme === 'dark') {
+          themeToggleIcon.className = 'fa-solid fa-sun';
+        } else {
+          themeToggleIcon.className = 'fa-solid fa-moon';
+        }
+      }
+      
+      // Initial icon check
+      updateToggleIcon(document.documentElement.getAttribute('data-theme'));
+      
+      themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', targetTheme);
+        localStorage.setItem('aura-theme', targetTheme);
+        updateToggleIcon(targetTheme);
+      });
+
+      // Mobile offcanvas navigation toggles
+      const mobileMenuTrigger = document.getElementById('mobileMenuTrigger');
+      const offcanvasMenu = document.getElementById('offcanvasMenu');
+      const offcanvasClose = document.getElementById('offcanvasClose');
+      const offcanvasOverlay = document.getElementById('offcanvasOverlay');
+      
+      function toggleMenu() {
+        offcanvasMenu.classList.toggle('active');
+        offcanvasOverlay.classList.toggle('active');
+      }
+      
+      if(mobileMenuTrigger) mobileMenuTrigger.addEventListener('click', toggleMenu);
+      if(offcanvasClose) offcanvasClose.addEventListener('click', toggleMenu);
+      if(offcanvasOverlay) offcanvasOverlay.addEventListener('click', toggleMenu);
+
+      // Search overlay activation
+      const searchOpenBtn = document.getElementById('searchOpenBtn');
+      const searchCloseBtn = document.getElementById('searchCloseBtn');
+      const searchModal = document.getElementById('searchModal');
+      
+      function toggleSearch() {
+        searchModal.classList.toggle('active');
+      }
+      
+      if(searchOpenBtn) searchOpenBtn.addEventListener('click', toggleSearch);
+      if(searchCloseBtn) searchCloseBtn.addEventListener('click', toggleSearch);
+
+      // Reading progress bar calculation & Scroll monitoring
+      const readingProgressBar = document.getElementById('readingProgressBar');
+      const backToTopBtn = document.getElementById('backToTopBtn');
+      const progressCircle = document.querySelector('.scroll-progress-ring circle');
+      
+      // SVG progress circle setup
+      const circumference = 2 * Math.PI * 23; // 2 * pi * r (r=23)
+      if(progressCircle) {
+        progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+        progressCircle.style.strokeDashoffset = circumference;
+      }
+      
+      window.addEventListener('scroll', () => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrolledPercentage = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        
+        // 1. Reading Progress Bar updating
+        if(readingProgressBar) {
+          readingProgressBar.style.width = `${scrolledPercentage}%`;
+        }
+        
+        // 2. Back to top visual triggers
+        if(scrollTop > 400) {
+          backToTopBtn.classList.add('visible');
+        } else {
+          backToTopBtn.classList.remove('visible');
+        }
+        
+        // 3. Circle SVG stroke updater
+        if(progressCircle) {
+          const offset = circumference - (scrolledPercentage / 100) * circumference;
+          progressCircle.style.strokeDashoffset = offset;
+        }
+      });
+      
+      if(backToTopBtn) {
+        backToTopBtn.addEventListener('click', () => {
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        });
+      }
+
+      // Copying article link handler
+      const copyLinkBtn = document.getElementById('copyLinkBtn');
+      const copyToast = document.getElementById('copyToast');
+      
+      if(copyLinkBtn) {
+        copyLinkBtn.addEventListener('click', () => {
+          const dummy = document.createElement('input');
+          dummy.value = window.location.href;
+          document.body.appendChild(dummy);
+          dummy.select();
+          document.execCommand('copy');
+          document.body.removeChild(dummy);
+          
+          if(copyToast) {
+            copyToast.classList.add('active');
+            setTimeout(() => {
+              copyToast.classList.remove('active');
+            }, 3000);
+          }
+        });
+      }
+
+    });
+    //]]>
+  </script>
+</body>
+</html>

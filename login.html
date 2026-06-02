@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="imad44.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Master Net | الرئيسية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+
+    <div class="app-container">
+        <header class="main-header">
+            <div class="greeting-box">
+                <h2 id="main-greeting">...</h2>
+                <p id="sub-greeting">أهلاً بك في ماستر نت</p>
+            </div>
+            <div class="date-time-wrapper">
+                <div class="time-now"><span id="clock">00:00</span> <small id="ampm"></small></div>
+                <div class="date-now" id="full-date"></div>
+            </div>
+        </header>
+
+        <main class="login-card">
+            <div class="logo-area">
+                <svg viewBox="0 0 500 500" class="brand-logo" width="100%" height="auto" style="max-height: 200px;">
+                    <!-- Gradients -->
+                    <defs>
+                        <linearGradient id="blueDark" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#002b7f" />
+                            <stop offset="100%" stop-color="#001845" />
+                        </linearGradient>
+                        <linearGradient id="blueLight" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#0088ff" />
+                            <stop offset="100%" stop-color="#00bfff" />
+                        </linearGradient>
+                        <linearGradient id="swooshGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#001845" />
+                            <stop offset="50%" stop-color="#0055ff" />
+                            <stop offset="100%" stop-color="#00bfff" />
+                        </linearGradient>
+                        
+                        <!-- Drop Shadow for 3D effect -->
+                        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+                        </filter>
+                    </defs>
+
+                    <path d="M 85 280 Q 250 360 450 190 " fill="none" stroke="url(#swooshGrad)" stroke-width="22" stroke-linecap="round"/>
+                    <path d="M 90 285 Q 250 390 420 180" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round"/>
+
+                    <g transform="translate(10, -10)">
+                        <!-- Clean perfect M shape -->
+                        <!-- Light part of M (drawn first) -->
+                        <path d="M 250 260 L 310 120 L 380 280" fill="none" stroke="url(#blueLight)" stroke-width="50" stroke-linejoin="round" stroke-linecap="round" />
+                        <!-- Dark part of M (overlaps with shadow) -->
+                        <path d="M 120 280 L 190 120 L 250 260" fill="none" stroke="url(#blueDark)" stroke-width="50" stroke-linejoin="round" stroke-linecap="round" filter="url(#shadow)"/>
+                    </g>
+                    
+                    <!-- Better Swoosh intersecting M -->
+                    <path d="M 85 280 Q 250 360 450 190" fill="none" stroke="url(#swooshGrad)" stroke-width="16" stroke-linecap="round"/>
+
+                    <!-- Wi-Fi Icon (Top Right) -->
+                    <g transform="translate(350, 90)">
+                        <!-- Dot -->
+                        <circle cx="0" cy="40" r="10" fill="#003399" />
+                        <!-- Small Arc -->
+                        <path d="M -15 20 Q 0 5 15 20" fill="none" stroke="#0088ff" stroke-width="6" stroke-linecap="round" />
+                        <!-- Medium Arc -->
+                        <path d="M -30 5 Q 0 -20 30 5" fill="none" stroke="#0088ff" stroke-width="7" stroke-linecap="round" />
+                        <!-- Large Arc -->
+                        <path d="M -45 -10 Q 0 -45 45 -10" fill="none" stroke="#003399" stroke-width="8" stroke-linecap="round" />
+                    </g>
+
+                    <!-- Arabic Text: ماستر نت -->
+                    <g transform="translate(250, 380)">
+                        <text x="0" y="0" font-family="'Segoe UI', Arial, sans-serif" font-size="65" font-weight="900" text-anchor="middle" direction="rtl">
+                            <tspan fill="url(#blueDark)">ماستر </tspan>
+                            <tspan fill="url(#blueLight)">نت</tspan>
+                        </text>
+                    </g>
+
+                    <!-- English Text: MASTER NET -->
+                    <g transform="translate(250, 420)">
+                        <text x="0" y="0" font-family="'Segoe UI', Arial, sans-serif" font-size="20" font-weight="800" fill="#001845" letter-spacing="10" text-anchor="middle">MASTER NET</text>
+                        <!-- Horizontal Decorative Lines -->
+                        <line x1="-150" y1="-6" x2="-100" y2="-6" stroke="#0088ff" stroke-width="2" stroke-linecap="round" />
+                        <line x1="110" y1="-6" x2="160" y2="-6" stroke="#0088ff" stroke-width="2" stroke-linecap="round" />
+                    </g>
+                </svg>
+            </div>
+
+            $(if error)
+            <div class="error-container" style="margin-top: 0; margin-bottom: 20px;">
+                <div class="error-text" id="ar-error">⚠️ $(error)</div>
+            </div>
+            <script>
+                var err = "$(error)".toLowerCase();
+                var msg = "حدث خطأ غير معروف.";
+
+                if (err.indexOf("invalid") !== -1 || err.indexOf("not found") !== -1) msg = "تأكد من رقم البطاقة أو كلمة المرور.";
+                else if (err.indexOf("uptime limit") !== -1) msg = "انتهت صلاحية البطاقة (انتهى الوقت).";
+                else if (err.indexOf("byte limit") !== -1 || err.indexOf("download limit") !== -1 || err.indexOf("traffic limit") !== -1) msg = "لقد استهلكت كامل باقتك (انتهى الرصيد).";
+                else if (err.indexOf("simultaneous") !== -1 || err.indexOf("already active") !== -1) msg = "هذه البطاقة مستخدمة في جهاز آخر حالياً!";
+                else if (err.indexOf("mac address") !== -1) msg = "عفواً، الدخول مقيد لجهاز آخر.";
+                else if (err.indexOf("not active") !== -1) msg = "البطاقة غير فعالة حالياً.";
+                else if (err.indexOf("radius") !== -1 || err.indexOf("timeout") !== -1) msg = "النظام يعاني من ضغط، جرب بعد ثوانٍ.";
+                else msg = "$(error)"; // إظهار رسالة النظام إذا لم يتم برمجتها أعلاه
+
+                document.getElementById("ar-error").innerHTML = "⚠️ " + msg;
+            </script>
+            $(endif)
+
+           
+             <form name="login" action="$(link-login-only)" method="post">
+                 <input type="hidden" name="dst" value="$(link-orig)" />
+                 <div class="input-group">
+                     <input type="text" name="username" id="usernameInput" placeholder="رقم البطاقة" class="input">
+                     <span class="icon">💳</span>
+                 </div>
+                 <div class="input-group">
+                     <input type="password" name="password"  placeholder="كلمة المرور" class="input">
+                     <span class="icon">🔒</span>
+                 </div>
+
+
+                 <div class="settings-row">
+                     <label class="toggle"><input type="checkbox" id="rememberCheck" checked><span class="slider"></span></label>
+                     <div class="label-text"><strong>حفظ بيانات البطاقة</strong></div>
+                 </div>
+                 <button type="submit" class="main-btn" onclick="return processLoginSubmit()">دخول</button>
+             </form>
+
+            <div class="divider">
+                <span>أو</span>
+            </div>
+
+
+
+            <!-- الشراء عبر جوال بي -->
+            <a href="pay.html" class="jawwal-pay-btn">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12V7H5a2 2 0 0 1 0-4h14V2"></path>
+                    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+                    <path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path>
+                </svg>
+                الشراء عبر محفظة جوال بي
+            </a>
+
+            <div class="copy-link-container">
+                <span class="copy-label">    او يمكنك الشراء عبر الواتساب عبر نسخ رقمنا:</span>
+                <div class="copy-box">
+                    <input type="text" id="botUsername" value="+970599332956" readonly>
+                    <button type="button" onclick="copyBotLink()" class="copy-btn">نسخ</button>
+                </div>
+            </div>
+
+            <!-- صندوق معلومات ذكي ومتحرك مفقود مسبقاً -->
+            <div class="fancy-info-box">
+                <div class="inner-decoration">
+                    <span id="sliding-info">     يمكنك شراء جميع انواع البطاقات عبر إرسال رسالة SMS أو عبر الواتساب  🚀</span>
+                </div>
+            </div>
+        </main>
+
+        <nav class="nav-bar">
+            <a href="login.html" class="nav-btn active">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span>الرئيسية</span>
+            </a>
+            <a href="packages.html" class="nav-btn">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"></path><path d="M11 3 8 9l4 13 4-13-3-6"></path><path d="M2 9h20"></path></svg>
+                <span>الباقات</span>
+            </a>
+            <a href="sellers.html" class="nav-btn">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <span>الموزعون</span>
+            </a>
+            <a href="support.html" class="nav-btn">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                <span>الدعم</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- كود الساعة والتحديثات -->
+    <script>
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let ampm = hours >= 12 ? 'مساءً' : 'صباحاً';
+
+            const mainG = document.getElementById('main-greeting');
+            const subG = document.getElementById('sub-greeting');
+
+            if (mainG) {
+                if (hours >= 5 && hours < 12) {
+                    mainG.innerHTML = "صباح الخير";
+                    if (subG) subG.innerHTML = "صباحية سعيدة مع ماستر نت";
+                } else {
+                    mainG.innerHTML = "مساء الخير";
+                    if (subG) subG.innerHTML = "أمسية سعيدة مع ماستر نت";
+                }
+            }
+
+            let h = hours % 12 || 12;
+            let m = minutes < 10 ? '0' + minutes : minutes;
+
+            if (document.getElementById('clock')) document.getElementById('clock').innerHTML = h + ':' + m;
+            if (document.getElementById('ampm')) document.getElementById('ampm').innerHTML = ampm;
+            if (document.getElementById('full-date')) {
+                const options = { weekday: 'long', month: 'long', day: 'numeric' };
+                document.getElementById('full-date').innerHTML = now.toLocaleDateString('ar-EG', options);
+            }
+            setTimeout(updateClock, 1000);
+        }
+        document.addEventListener('DOMContentLoaded', updateClock);
+    </script>
+
+    <!-- كود نسخ البوت -->
+    <script>
+        function copyBotLink() {
+            var copyText = document.getElementById("botUsername");
+            if (!copyText) return;
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); /* للأجهزة المحمولة */
+            document.execCommand("copy");
+            
+            var btn = document.querySelector(".copy-btn");
+            if (btn) {
+                btn.innerHTML = "تم النسخ ✔️";
+                btn.classList.add("copied");
+                setTimeout(function() {
+                    btn.innerHTML = "نسخ";
+                    btn.classList.remove("copied");
+                }, 2500);
+            }
+        }
+    </script>
+
+
+
+    <!-- كود حفظ واسترجاع بيانات الدخول تلقائياً -->
+    <script>
+        function processLoginSubmit() {
+            var uEl = document.getElementById('usernameInput');
+            var pEl = document.getElementById('passwordInput');
+            if (!uEl) return true;
+            
+            var u = uEl.value.trim();
+            var p = pEl ? pEl.value : '';
+            
+            var originalPasswordEmpty = (p.trim() === '');
+            
+            // تعيين القيمة للحقل الذي يتم إرساله فعلياً إلى مايكروتك
+            var hiddenPassEl = document.getElementById('hiddenPassword');
+            if (hiddenPassEl) {
+                if (originalPasswordEmpty) {
+                    hiddenPassEl.value = u;
+                } else {
+                    hiddenPassEl.value = p;
+                }
+            } else if (pEl) {
+                if (originalPasswordEmpty) {
+                    pEl.value = u;
+                }
+            }
+            
+            var rememberEl = document.getElementById('rememberCheck');
+            if (rememberEl && rememberEl.checked) {
+                localStorage.setItem('hotspot_username', u);
+                if (originalPasswordEmpty) {
+                    localStorage.removeItem('hotspot_password'); // لا نحفظها لكي لا تعبأ تلقائياً في المرة القادمة
+                } else {
+                    if (pEl) localStorage.setItem('hotspot_password', p);
+                }
+            } else {
+                localStorage.removeItem('hotspot_username');
+                localStorage.removeItem('hotspot_password');
+            }
+
+            return intercept99();
+        }
+
+         // استرجاع البيانات المحفوظة تلقائياً ودعم الدخول التلقائي من صفحة الدفع
+          document.addEventListener('DOMContentLoaded', function() {
+              const urlParams = new URLSearchParams(window.location.search);
+              const paramUser = urlParams.get('username');
+              const paramPass = urlParams.get('password');
+              const paramAuto = urlParams.get('autologin');
+
+              var uEl = document.getElementById('usernameInput');
+              var pEl = document.getElementById('passwordInput');
+
+              if (paramUser && uEl) {
+                  uEl.value = paramUser;
+                  if (pEl) {
+                      pEl.value = paramPass || '';
+                  }
+
+                  if (paramAuto === 'true') {
+                      setTimeout(function() {
+                          const loginForm = document.querySelector('form[name="login"]');
+                          if (loginForm) {
+                              processLoginSubmit();
+                              loginForm.submit();
+                          }
+                      }, 600);
+                      return;
+                  }
+              }
+
+              var savedUser = localStorage.getItem('hotspot_username');
+              var savedPass = localStorage.getItem('hotspot_password');
+              
+              if (savedUser && uEl) {
+                  uEl.value = savedUser;
+              }
+              if (savedPass && savedPass !== savedUser && pEl) {
+                  pEl.value = savedPass;
+              }
+              
+              if (uEl && pEl) {
+                  uEl.addEventListener('input', function() {
+                      pEl.value = '';
+                  });
+              }
+          });
+    </script>
+
+    <!-- كود اعتراض المشتركين المميزين -->
+    <script>
+        function intercept99() {
+            var uEl = document.getElementById('usernameInput');
+            if (!uEl) return true;
+            var u = uEl.value.trim();
+            var specialUsers = window.specialUsers || {};
+
+            if (specialUsers[u]) {
+                let data = specialUsers[u];
+                window.location.href =
+                    "go.html?r=" + encodeURIComponent(data.real) +
+                    "&n=" + encodeURIComponent(data.note);
+                return false;
+            }
+
+            return true; // إكمال عملية الدخول العادية
+        }
+    </script>
+
+    <!-- كود الدوران المتحرك للإعلانات -->
+    <script src="script.js"></script>
+
+    <!-- شريط الإعلانات السفلي المتطور -->
+    <div class="bottom-marquee">
+        <div class="marquee-content">
+            <span>🚀 أهلاً بكم في شبكة ماستر نت - أسرع إنترنت في المنطقة!</span>
+            <span>💳 متوفر شراء البطاقات عبر إرسال رسالة SMS</span>
+            <span>🛠️ في حال وجود أي مشكلة يرجى التواصل مع الدعم الفني</span>
+        </div>
+    </div>
+</body>
+
+</html>

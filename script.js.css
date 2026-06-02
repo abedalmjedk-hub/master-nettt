@@ -1,0 +1,33 @@
+function updateClock() {
+    const now = new Date();
+    let hours = now.getHours();
+    let minutes = now.getMinutes();
+    let ampm = hours >= 12 ? 'مساءً' : 'صباحاً';
+    
+    // تحديث الترحيب
+    const mainG = document.getElementById('main-greeting');
+    if (mainG) {
+        mainG.innerHTML = (hours >= 5 && hours < 12) ? "صباح الخير" : "مساء الخير";
+    }
+
+    // تنسيق الوقت
+    let displayHours = hours % 12 || 12;
+    let displayMinutes = minutes < 10 ? '0' + minutes : minutes;
+    
+    const clockEl = document.getElementById('clock');
+    const ampmEl = document.getElementById('ampm');
+    const dateEl = document.getElementById('full-date');
+
+    if (clockEl) clockEl.innerHTML = displayHours + ':' + displayMinutes;
+    if (ampmEl) ampmEl.innerHTML = ampm;
+
+    if (dateEl) {
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        dateEl.innerHTML = now.toLocaleDateString('ar-EG', options);
+    }
+
+    setTimeout(updateClock, 1000);
+}
+
+// التأكد من تشغيل الساعة حتى لو تأخر تحميل الصفحة
+window.addEventListener('DOMContentLoaded', updateClock);

@@ -1,0 +1,2090 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم والإدارة | ماستر نت</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --card-bg: rgba(17, 24, 39, 0.75);
+            --border-glow: rgba(0, 162, 237, 0.25);
+            --cyan-neon: #00e5ff;
+            --blue-neon: #0077ff;
+            --emerald-neon: #00ff88;
+            --rose-neon: #ff0055;
+            --text-white: #f8fafc;
+            --text-gray: #94a3b8;
+            --shadow-glow: 0 0 25px rgba(0, 229, 255, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 0;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(0, 229, 255, 0.08) 0px, transparent 40%),
+                radial-gradient(at 90% 10%, rgba(0, 119, 255, 0.08) 0px, transparent 40%),
+                radial-gradient(at 50% 90%, rgba(0, 255, 136, 0.05) 0px, transparent 40%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text-white);
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* رأس الصفحة الفخم */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 3px solid var(--cyan-neon);
+            padding: 20px 25px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .brand-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-glow {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--blue-neon), var(--cyan-neon));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--cyan-neon);
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--bg-dark);
+        }
+
+        .brand-title h1 {
+            font-size: 1.4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--text-white), var(--cyan-neon));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-title p {
+            font-size: 0.78rem;
+            color: var(--text-gray);
+            font-weight: 600;
+        }
+
+        .header-widgets {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .time-box {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 8px 18px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-box span {
+            color: var(--cyan-neon);
+            letter-spacing: 0.5px;
+        }
+
+        /* لوحة إحصائيات المؤشرات */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 22px;
+            padding: 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+        }
+
+        .stat-card.cyan::before { background: var(--cyan-neon); }
+        .stat-card.emerald::before { background: var(--emerald-neon); }
+        .stat-card.rose::before { background: var(--rose-neon); }
+        .stat-card.blue::before { background: var(--blue-neon); }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-glow);
+            border-color: var(--border-glow);
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            font-weight: 700;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card.cyan .stat-value { color: var(--cyan-neon); }
+        .stat-card.emerald .stat-value { color: var(--emerald-neon); }
+        .stat-card.rose .stat-value { color: var(--rose-neon); }
+        .stat-card.blue .stat-value { color: var(--blue-neon); }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-card.cyan .stat-icon { background: rgba(0, 229, 255, 0.08); color: var(--cyan-neon); }
+        .stat-card.emerald .stat-icon { background: rgba(0, 255, 136, 0.08); color: var(--emerald-neon); }
+        .stat-card.rose .stat-icon { background: rgba(255, 0, 85, 0.08); color: var(--rose-neon); }
+        .stat-card.blue .stat-icon { background: rgba(0, 119, 255, 0.08); color: var(--blue-neon); }
+
+        /* الشاشات الرئيسية المقسمة لـ 3 أعمدة تفاعلية */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 1100px) {
+            .workspace-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 750px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-white);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 12px;
+        }
+
+        .panel-title svg {
+            stroke: var(--cyan-neon);
+            width: 22px;
+            height: 22px;
+        }
+
+        /* صندوق إدخال وتحليل الطلبات */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-label {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            font-weight: 700;
+        }
+
+        .neon-textarea {
+            width: 100%;
+            height: 90px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 12px;
+            color: var(--cyan-neon);
+            font-family: monospace;
+            font-size: 0.85rem;
+            resize: none;
+            outline: none;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .neon-textarea:focus {
+            border-color: var(--cyan-neon);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
+        }
+
+        .neon-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 12px 16px;
+            color: var(--text-white);
+            font-size: 0.95rem;
+            outline: none;
+            font-weight: 700;
+        }
+
+        .neon-input:focus {
+            border-color: var(--cyan-neon);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
+        }
+
+        /* كارد تفاصيل الطلب المفكك */
+        .parsed-order-box {
+            background: rgba(0, 229, 255, 0.02);
+            border: 1.5px dashed rgba(0, 229, 255, 0.2);
+            border-radius: 18px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { border-color: rgba(0, 229, 255, 0.15); }
+            to { border-color: rgba(0, 229, 255, 0.35); }
+        }
+
+        .parsed-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding-bottom: 8px;
+        }
+
+        .parsed-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .parsed-label {
+            color: var(--text-gray);
+        }
+
+        .parsed-val {
+            color: var(--text-white);
+        }
+
+        .parsed-val.highlight {
+            color: var(--emerald-neon);
+        }
+
+        /* أزرار الإجراءات النيونية */
+        .btn-neon-cyan {
+            background: linear-gradient(135deg, var(--blue-neon), var(--cyan-neon));
+            color: var(--bg-dark);
+            font-weight: 800;
+            border: none;
+            border-radius: 14px;
+            padding: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.2);
+        }
+
+        .btn-neon-cyan:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(0, 229, 255, 0.35);
+        }
+
+        .btn-neon-cyan:active {
+            transform: translateY(1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-white);
+            font-weight: 700;
+            border-radius: 14px;
+            padding: 12px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* لوحة إدارة مخزون الكروت المسبقة التوليد */
+        .inventory-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 4px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .inv-tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 10px 5px;
+            border-radius: 10px;
+            color: var(--text-gray);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .inv-tab-btn.active {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--cyan-neon);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        }
+
+        /* كارد الاستجابة الفورية */
+        .alert-box {
+            background: rgba(0, 255, 136, 0.03);
+            border: 1px solid rgba(0, 255, 136, 0.15);
+            border-radius: 16px;
+            padding: 15px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.6;
+            color: var(--emerald-neon);
+        }
+
+        /* جدول العمليات والسجلات */
+        .logs-panel {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        .neon-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            font-size: 0.88rem;
+        }
+
+        .neon-table th {
+            color: var(--text-gray);
+            font-weight: 800;
+            padding: 12px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .neon-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-weight: 600;
+        }
+
+        .neon-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--cyan-neon);
+        }
+
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            display: inline-block;
+        }
+
+        .badge-status.success {
+            background: rgba(0, 255, 136, 0.08);
+            color: var(--emerald-neon);
+            border: 1px solid rgba(0, 255, 136, 0.15);
+        }
+
+        /* تعديلات التبويبات والمخزون المضاف */
+        .card-stock-display {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-badge {
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--cyan-neon);
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            color: var(--text-gray);
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link:hover {
+            color: var(--cyan-neon);
+            background: rgba(0, 229, 255, 0.05);
+            border-color: rgba(0, 229, 255, 0.15);
+        }
+
+        /* Toast notification */
+        #adminToast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: linear-gradient(135deg, #0077ff, #00e5ff);
+            color: #090d16;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 800;
+            padding: 12px 26px;
+            border-radius: 50px;
+            box-shadow: 0 6px 24px rgba(0, 229, 255, 0.35);
+            z-index: 99999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+        }
+        #adminToast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @keyframes popScale {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes flashDot {
+            from { opacity: 0.4; }
+            to { opacity: 1; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        /* أزرار الحفظ والتحميل */
+        .btn-save {
+            background: linear-gradient(135deg, #00c853, #00e676);
+            color: #090d16;
+            font-weight: 800;
+            border: none;
+            border-radius: 12px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
+            font-family: 'Cairo', sans-serif;
+        }
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 200, 83, 0.45);
+        }
+        .btn-load {
+            background: linear-gradient(135deg, #ff6d00, #ff9100);
+            color: #090d16;
+            font-weight: 800;
+            border: none;
+            border-radius: 12px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 12px rgba(255, 109, 0, 0.3);
+            font-family: 'Cairo', sans-serif;
+        }
+        .btn-load:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(255, 109, 0, 0.45);
+        }
+
+        /* CSV استيراد */
+        .csv-import-area {
+            border: 2px dashed rgba(0, 229, 255, 0.25);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(0, 229, 255, 0.02);
+        }
+        .csv-import-area:hover {
+            border-color: var(--cyan-neon);
+            background: rgba(0, 229, 255, 0.06);
+        }
+        .csv-import-area label {
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-gray);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        .csv-import-area label span.icon {
+            font-size: 1.8rem;
+        }
+        .csv-import-area label span.hint {
+            font-size: 0.72rem;
+            color: rgba(148, 163, 184, 0.6);
+        }
+
+        /* نافذة معاينة CSV */
+        #csvPreviewModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(9, 13, 22, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 15000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            direction: rtl;
+        }
+        .csv-modal-box {
+            background: rgba(17, 24, 39, 0.98);
+            border: 1.5px solid rgba(0, 229, 255, 0.25);
+            box-shadow: 0 0 40px rgba(0, 229, 255, 0.12);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 560px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            animation: popScale 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+        }
+        .csv-modal-header {
+            padding: 20px 22px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .csv-modal-title {
+            font-size: 1.1rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff, var(--cyan-neon));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .csv-modal-badge {
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--cyan-neon);
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+        .csv-preview-table-wrap {
+            overflow-y: auto;
+            flex: 1;
+            padding: 0 6px;
+            max-height: 50vh;
+        }
+        .csv-preview-table-wrap::-webkit-scrollbar {
+            width: 5px;
+        }
+        .csv-preview-table-wrap::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.02);
+        }
+        .csv-preview-table-wrap::-webkit-scrollbar-thumb {
+            background: rgba(0,229,255,0.2);
+            border-radius: 10px;
+        }
+        .csv-preview-tbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            direction: ltr;
+        }
+        .csv-preview-tbl thead th {
+            position: sticky;
+            top: 0;
+            background: rgba(17, 24, 39, 0.99);
+            color: var(--text-gray);
+            font-weight: 800;
+            padding: 10px 14px;
+            border-bottom: 2px solid rgba(0, 229, 255, 0.15);
+            text-align: left;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .csv-preview-tbl thead th:first-child {
+            color: rgba(148,163,184,0.5);
+            width: 44px;
+        }
+        .csv-preview-tbl tbody tr {
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background 0.2s;
+        }
+        .csv-preview-tbl tbody tr:hover {
+            background: rgba(0, 229, 255, 0.03);
+        }
+        .csv-preview-tbl tbody td {
+            padding: 10px 14px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .csv-preview-tbl tbody td:first-child {
+            color: rgba(148,163,184,0.4);
+            font-size: 0.75rem;
+            text-align: center;
+        }
+        .csv-user-cell {
+            color: var(--cyan-neon);
+            font-weight: 700;
+        }
+        .csv-pass-cell {
+            color: var(--emerald-neon);
+        }
+        .csv-pass-empty {
+            color: rgba(148,163,184,0.35);
+            font-style: italic;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.78rem;
+        }
+        .csv-modal-footer {
+            padding: 16px 22px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .csv-modal-info {
+            font-size: 0.78rem;
+            color: var(--text-gray);
+            font-weight: 700;
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- نافذة تسجيل الدخول للمدير -->
+    <div id="adminLoginOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #090d16; background-image: radial-gradient(at 50% 50%, rgba(0, 229, 255, 0.08) 0px, transparent 50%); z-index: 20000; justify-content: center; align-items: center; padding: 20px; direction: rtl;">
+        <div style="background: rgba(17, 24, 39, 0.95); border: 1.5px solid rgba(0, 229, 255, 0.25); box-shadow: 0 0 35px rgba(0, 229, 255, 0.15); border-radius: 24px; width: 100%; max-width: 380px; padding: 30px; display: flex; flex-direction: column; gap: 20px; text-align: center; animation: popScale 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--blue-neon), var(--cyan-neon)); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 0 20px var(--cyan-neon); font-size: 1.8rem;">🔑</div>
+            <div>
+                <h2 style="font-size: 1.4rem; font-weight: 900; background: linear-gradient(135deg, white, var(--cyan-neon)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">لوحة إدارة ماستر نت</h2>
+                <p style="font-size: 0.8rem; color: var(--text-gray); margin-top: 5px;">يرجى إدخال كلمة المرور للوصول إلى لوحة التحكم</p>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px; text-align: right;">
+                <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-gray);">🔒 كلمة مرور المسؤول:</label>
+                <input type="password" id="adminPasswordInput" placeholder="أدخل كلمة المرور" style="width: 100%; background: rgba(0, 0, 0, 0.25); border: 1.5px solid rgba(0, 229, 255, 0.15); border-radius: 12px; padding: 12px 15px; font-size: 1.1rem; color: var(--text-white); font-family: monospace; outline: none; transition: border-color 0.2s; text-align: center;" onfocus="this.style.borderColor='var(--cyan-neon)'" onblur="this.style.borderColor='rgba(0, 229, 255, 0.15)'" onkeydown="if(event.key==='Enter'){checkAdminPassword();}">
+                <span id="loginErrorMessage" style="font-size: 0.78rem; color: var(--rose-neon); font-weight: bold; display: none; margin-top: 4px; text-align: center;">❌ كلمة المرور غير صحيحة!</span>
+            </div>
+
+            <button type="button" onclick="checkAdminPassword()" style="width: 100%; background: linear-gradient(135deg, var(--blue-neon), var(--cyan-neon)); color: var(--bg-dark); font-weight: 900; font-size: 1rem; padding: 12px; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 5px 15px rgba(0, 229, 255, 0.25); font-family: 'Cairo', sans-serif;">تسجيل الدخول 🚪</button>
+        </div>
+    </div>
+
+    <div class="dashboard-container" style="display: none;">
+        <!-- الرأس الترحيبي -->
+        <header class="admin-header">
+            <div class="brand-info">
+                <div class="logo-glow">M</div>
+                <div class="brand-title">
+                    <h1>لوحة الإدارة والمبيعات</h1>
+                    <p>إدارة طلبات كروت شبكة ماستر نت</p>
+                </div>
+            </div>
+            <div class="header-widgets">
+                <!-- أزرار الحفظ والتحميل -->
+                <button class="btn-save" onclick="saveDataToFile()" title="حفظ جميع البيانات كملف للاستخدام على أي جهاز">
+                    💾 حفظ البيانات
+                </button>
+                <button class="btn-load" onclick="document.getElementById('loadDataFile').click()" title="تحميل بيانات محفوظة مسبقاً">
+                    📂 استعادة البيانات
+                </button>
+                <input type="file" id="loadDataFile" accept=".json" style="display:none" onchange="loadDataFromFile(event)">
+
+                <div class="nav-links">
+                    <a href="login.html" class="nav-link">👈 العودة للموقع الرئيسي</a>
+                    <button type="button" onclick="adminLogout()" style="background: rgba(255, 0, 85, 0.08); color: var(--rose-neon); border: 1px solid rgba(255, 0, 85, 0.2); padding: 6px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif;">🔒 تسجيل الخروج</button>
+                </div>
+                <div class="time-box">
+                    الساعة الآن: <span id="admin-clock">00:00:00</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- شبكة الإحصائيات الفخمة -->
+        <section class="stats-grid">
+            <div class="stat-card emerald">
+                <div class="stat-info">
+                    <span class="stat-label">إجمالي الأرباح المستلمة</span>
+                    <span class="stat-value" id="stat-revenue">0 شيكل</span>
+                </div>
+                <div class="stat-icon">💰</div>
+            </div>
+
+            <div class="stat-card cyan">
+                <div class="stat-info">
+                    <span class="stat-label">الطلبات المكتملة</span>
+                    <span class="stat-value" id="stat-orders-count">0 طلب</span>
+                </div>
+                <div class="stat-icon">⚡</div>
+            </div>
+
+            <div class="stat-card blue">
+                <div class="stat-info">
+                    <span class="stat-label">مخزون الكروت المتبقي</span>
+                    <span class="stat-value" id="stat-total-stock">0 كرت</span>
+                </div>
+                <div class="stat-icon">💳</div>
+            </div>
+
+            <div class="stat-card rose">
+                <div class="stat-info">
+                    <span class="stat-label">الطلبات الملغية / المعلقة</span>
+                    <span class="stat-value" id="stat-pending">0 طلب</span>
+                </div>
+                <div class="stat-icon">🕒</div>
+            </div>
+        </section>
+
+        <!-- منطقة العمل الرئيسية -->
+        <section class="workspace-grid">
+            <!-- اللوحة الأولى: طابور الطلبات المباشرة بانتظار الموافقة النشطة -->
+            <div class="panel-card" style="border-color: rgba(0, 255, 136, 0.15); box-shadow: 0 10px 25px rgba(0, 255, 136, 0.04);">
+                <h3 class="panel-title" style="color: var(--emerald-neon); border-color: rgba(0, 255, 136, 0.15);">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--emerald-neon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    الطلبات المباشرة النشطة (بانتظار الموافقة)
+                </h3>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-gray); background: rgba(0, 255, 136, 0.05); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(0, 255, 136, 0.1);">
+                    <span>مزامنة مباشرة قيد التشغيل:</span>
+                    <span style="color: var(--emerald-neon); font-weight: bold; display: flex; align-items: center; gap: 6px;">
+                        <span style="width: 8px; height: 8px; background: var(--emerald-neon); border-radius: 50%; display: inline-block; animation: flashDot 1s infinite alternate;"></span>
+                        متصل بالشبكة
+                    </span>
+                </div>
+
+                <div id="liveQueueContainer" style="display: flex; flex-direction: column; gap: 15px; max-height: 430px; overflow-y: auto; padding-right: 2px;">
+                    <!-- سيتم حقن الطلبات الواردة هنا تلقائياً -->
+                    <div id="noLiveOrdersMessage" style="text-align: center; color: var(--text-gray); padding: 40px 10px; font-size: 0.85rem; font-weight: 700; border: 1.5px dashed rgba(255, 255, 255, 0.04); border-radius: 16px;">
+                        👍 لا توجد طلبات معلقة حالياً.
+                        <small style="display: block; margin-top: 6px; font-size: 0.72rem; font-weight: 600; line-height: 1.5;">بمجرد قيام عميل بطلب تفعيل من صفحة الدفع، سيظهر طلبه هنا فوراً مع رنين تنبيه!</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- اللوحة الثانية: التسليم اليدوي للكروت -->
+            <div class="panel-card">
+                <h3 class="panel-title">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    التسليم اليدوي للكروت المباشرة
+                </h3>
+
+                <!-- اختيار الباقة -->
+                <div class="input-group">
+                    <label class="input-label" for="manualPackageSelect">اختر الفئة المطلوبة:</label>
+                    <select class="neon-input" id="manualPackageSelect" onchange="loadManualCardFromStock()" style="background: rgba(0, 0, 0, 0.35); color: var(--text-white); font-family: 'Cairo', sans-serif;">
+                        <option value="1">1 شيكل (8 ساعات)</option>
+                        <option value="3">3 شيكل (24 ساعة)</option>
+                        <option value="50">50 شيكل (شهري)</option>
+                    </select>
+                </div>
+
+                <!-- رقم الهاتف -->
+                <div class="input-group">
+                    <label class="input-label" for="manualBuyerPhone">رقم هاتف المشتري (اختياري):</label>
+                    <input type="text" class="neon-input" id="manualBuyerPhone" placeholder="مثال: 0599xxxxxx" style="font-family: monospace;">
+                </div>
+
+                <!-- تسليم الكروت -->
+                <div class="input-group" id="deliveryContainer" style="display: block;">
+                    <label class="input-label" for="cardCodeDeliver">كود الكارت المراد تسليمه:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" class="neon-input" id="cardCodeDeliver" placeholder="سيتم سحبه من المخزون أو اكتبه يدوياً" style="font-family: monospace;">
+                        <button class="btn-secondary" onclick="generateRandomCard()">توليد كود</button>
+                    </div>
+                    <button class="btn-neon-cyan" style="margin-top: 10px;" onclick="deliverManualCardToBuyer()">
+                        ✅ إتمام الدفع ونسخ رسالة التفعيل للعميل
+                    </button>
+                </div>
+
+                <div class="alert-box" id="emptyStockAlert" style="display: none; background: rgba(255, 0, 85, 0.04); border-color: rgba(255, 0, 85, 0.15); color: var(--rose-neon);">
+                    ⚠️ تنبيه: المخزون فارغ لهذه الفئة! يرجى إدخال الكود يدوياً أو تعبئة المخزون من القسم الجانبي.
+                </div>
+            </div>
+
+            <!-- اللوحة اليسرى: إدارة مخزون الكروت المسبقة -->
+            <div class="panel-card">
+                <h3 class="panel-title">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                    إدارة مخزون كروت الشبكة المسبقة
+                </h3>
+
+                <!-- تبويبات الفئات الثلاث -->
+                <div class="inventory-tabs">
+                    <button class="inv-tab-btn active" onclick="switchInventoryTab('1', this)">1 شيكل (8 ساعات)</button>
+                    <button class="inv-tab-btn" onclick="switchInventoryTab('3', this)">3 شيكل (24 ساعة)</button>
+                    <button class="inv-tab-btn" onclick="switchInventoryTab('50', this)">50 شيكل (شهري)</button>
+                </div>
+
+                <!-- إحصائية الفئة الحالية -->
+                <div class="card-stock-display">
+                    <span>عدد الكروت المتاحة حالياً في هذه الفئة:</span>
+                    <span class="stock-badge" id="currentStockDisplay">0 كروت</span>
+                </div>
+
+                <div class="input-group">
+                    <div style="display: flex; gap: 15px; margin-top: 5px;">
+                        <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                            <label class="input-label" for="newCardUser">اليوزر (Enter للباس):</label>
+                            <input type="text" class="neon-input" id="newCardUser" placeholder="user123" style="font-family: monospace;"
+                                onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('newCardPass').focus();}">
+                        </div>
+                        <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                            <label class="input-label" for="newCardPass">الباس (Enter يضيف الكرت):</label>
+                            <input type="text" class="neon-input" id="newCardPass" placeholder="4567 أو فارغ" style="font-family: monospace;"
+                                onkeydown="if(event.key==='Enter'){event.preventDefault();addCardsToInventory();}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- استيراد CSV -->
+                <div class="csv-import-area" onclick="document.getElementById('csvFileInput').click()">
+                    <label>
+                        <span class="icon">📋</span>
+                        <span>استيراد يوزرات من ملف CSV</span>
+                        <span class="hint">الصيغة: username,password (سطر لكل كارت)</span>
+                    </label>
+                    <input type="file" id="csvFileInput" accept=".csv,.txt" style="display:none" onchange="importFromCSV(event)">
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-neon-cyan" style="flex: 2;" onclick="addCardsToInventory()">
+                        📥 إضافة الكروت للمخزون
+                    </button>
+                    <button class="btn-secondary" style="flex: 1; border-color: rgba(255, 0, 85, 0.2); color: var(--rose-neon);" onclick="clearStockForTab()">
+                        تفريغ الفئة
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- سجل العمليات والطلبات المستلمة -->
+        <section class="logs-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
+                <h3 class="panel-title" style="border-bottom: none; padding-bottom: 0;">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    الأرشيف والسجلات
+                </h3>
+                <div class="inventory-tabs" style="width: auto; display: flex; gap: 5px;">
+                    <button class="inv-tab-btn active" id="logTabOrdersBtn" onclick="switchLogTab('orders')">سجل الطلبات المعالجة</button>
+                    <button class="inv-tab-btn" id="logTabUsedBtn" onclick="switchLogTab('used')">اليوزرات المستخدمة (تم بيعها)</button>
+                </div>
+            </div>
+            
+            <!-- جدول الطلبات -->
+            <div class="table-wrapper" id="ordersLogWrapper">
+                <table class="neon-table">
+                    <thead>
+                        <tr>
+                            <th>رقم العملية</th>
+                            <th>نوع الباقة</th>
+                            <th>الكمية</th>
+                            <th>القيمة المستلمة</th>
+                            <th>الكارت المسلّم</th>
+                            <th>الوقت والتاريخ</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: var(--text-gray); padding: 30px;">
+                                لا توجد عمليات مسجلة حالياً.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- جدول الكروت المستخدمة -->
+            <div class="table-wrapper" id="usedCardsWrapper" style="display: none;">
+                <table class="neon-table">
+                    <thead>
+                        <tr>
+                            <th>اليوزر (Username)</th>
+                            <th>الباسورد (Password)</th>
+                            <th>نوع الباقة</th>
+                            <th>رقم الهاتف / الطلب</th>
+                            <th>تاريخ ووقت الاستخدام</th>
+                            <th>النوع</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usedCardsTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--text-gray); padding: 30px;">
+                                لا توجد يوزرات مستخدمة حالياً.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; margin-top: 15px; gap: 10px;">
+                <button class="btn-secondary" id="clearLogBtn" style="border-color: rgba(255, 0, 85, 0.2); color: var(--rose-neon);" onclick="clearLogsHistory()">
+                    🗑️ مسح سجل العمليات بالكامل
+                </button>
+                <button class="btn-secondary" id="clearUsedBtn" style="border-color: rgba(255, 0, 85, 0.2); color: var(--rose-neon); display: none;" onclick="clearUsedCardsHistory()">
+                    🗑️ مسح قائمة اليوزرات المستخدمة
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- نافذة رفض الطلب مع السبب -->
+    <div id="rejectReasonModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(9, 13, 22, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 10000; justify-content: center; align-items: center; padding: 20px; direction: rtl;">
+        <div style="background: var(--card-bg); border: 1px solid rgba(255, 0, 85, 0.35); box-shadow: 0 0 25px rgba(255, 0, 85, 0.2); border-radius: 20px; width: 100%; max-width: 400px; padding: 22px; display: flex; flex-direction: column; gap: 15px; animation: popScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <h3 style="font-size: 1.25rem; font-weight: 900; color: var(--rose-neon); border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 10px;">❌ رفض الطلب وتحديد السبب</h3>
+            <p style="font-size: 0.85rem; color: var(--text-gray); font-weight: 600; line-height: 1.5;">برجاء كتابة سبب رفض الطلب ليظهر للعميل بشكل فوري:</p>
+            <textarea id="rejectReasonInput" style="width: 100%; height: 100px; background: rgba(0, 0, 0, 0.2); border: 1.5px solid rgba(255, 0, 85, 0.25); border-radius: 12px; padding: 12px; font-size: 0.9rem; color: var(--text-white); font-family: 'Cairo', sans-serif; resize: none; outline: none; transition: border-color 0.2s;" placeholder="مثال: لم نتوصل بقيمة التحويل، رقم الجوال غير صحيح..." onfocus="this.style.borderColor='var(--rose-neon)'" onblur="this.style.borderColor='rgba(255, 0, 85, 0.25)'">لم يصلنا أي تحويل مالي بهذا الرقم أو القيمة غير مطابقة.</textarea>
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <button type="button" onclick="confirmRejectLiveOrder()" style="flex: 2; background: var(--rose-neon); color: var(--text-white); border: none; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif;">تأكيد الرفض ❌</button>
+                <button type="button" onclick="closeRejectModal()" style="flex: 1; background: rgba(255, 255, 255, 0.05); color: var(--text-gray); border: 1px solid rgba(255, 255, 255, 0.08); padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif;">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة معاينة CSV -->
+    <div id="csvPreviewModal">
+        <div class="csv-modal-box">
+            <div class="csv-modal-header">
+                <span class="csv-modal-title">📋 معاينة الكروت المستوردة</span>
+                <span class="csv-modal-badge" id="csvPreviewCount">0 كارت</span>
+            </div>
+
+            <div class="csv-preview-table-wrap">
+                <table class="csv-preview-tbl">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>👤 Username</th>
+                            <th>🔒 Password</th>
+                        </tr>
+                    </thead>
+                    <tbody id="csvPreviewBody"></tbody>
+                </table>
+            </div>
+
+            <div class="csv-modal-footer">
+                <span class="csv-modal-info" id="csvPreviewInfo">سيتم إضافتها لفئة <span id="csvTargetTab" style="color:var(--cyan-neon);"></span></span>
+                <button type="button" onclick="closeCsvPreview()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-gray); padding: 10px 18px; border-radius: 12px; font-weight: 700; cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 0.88rem;">إلغاء ✖</button>
+                <button type="button" onclick="confirmCsvImport()" style="background: linear-gradient(135deg, var(--blue-neon), var(--cyan-neon)); color: #090d16; border: none; padding: 10px 22px; border-radius: 12px; font-weight: 900; cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 0.9rem; box-shadow: 0 4px 14px rgba(0,229,255,0.25);">✅ تأكيد الإضافة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="adminToast"></div>
+
+    <!-- كود لوحة الإدارة التفاعلي -->
+    <script>
+        // إعداد المستودعات والبيانات
+        let cardInventory = {
+            '1': [],
+            '3': [],
+            '50': []
+        };
+        let usedCards = []; // قائمة اليوزرات المستخدمة
+        let orderLogs = [];
+        let totalRevenue = 0;
+        let activeTab = '1'; // الفئة النشطة لإضافة الكروت
+
+        // البيانات المؤقتة للطلب النشط الذي يجري تفكيكه حالياً
+        let activeOrder = null;
+
+        // إظهار رسالة Toast
+        let _toastTimer = null;
+        function showToast(msg) {
+            const t = document.getElementById('adminToast');
+            t.textContent = msg;
+            t.classList.add('show');
+            if (_toastTimer) clearTimeout(_toastTimer);
+            _toastTimer = setTimeout(() => { t.classList.remove('show'); }, 2200);
+        }
+
+        // تهيئة البيانات عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            // استرجاع البيانات المخزنة محلياً
+            if (localStorage.getItem('mn_card_inventory')) {
+                cardInventory = JSON.parse(localStorage.getItem('mn_card_inventory'));
+            }
+            if (localStorage.getItem('mn_order_logs')) {
+                orderLogs = JSON.parse(localStorage.getItem('mn_order_logs'));
+            }
+            if (localStorage.getItem('mn_used_cards')) {
+                usedCards = JSON.parse(localStorage.getItem('mn_used_cards'));
+            }
+            if (localStorage.getItem('mn_total_revenue')) {
+                totalRevenue = parseFloat(localStorage.getItem('mn_total_revenue'));
+            }
+
+            // تحديث الواجهات والعدادات
+            updateDashboardStats();
+            updateCurrentStockView();
+            renderLogsTable();
+            startClock();
+            loadManualCardFromStock(); // تحميل أول كارت من المخزن تلقائياً للتسليم اليدوي
+
+            // المزامنة والربط المباشر
+            checkLocalPendingOrders();
+            initMqtt();
+
+            // تفعيل فحص وتحديث الطلبات محلياً باستمرار
+            startLocalStoragePoll();
+        });
+
+        // تشغيل الساعة في رأس الصفحة
+        function startClock() {
+            setInterval(function() {
+                const now = new Date();
+                let h = now.getHours();
+                let m = now.getMinutes();
+                let s = now.getSeconds();
+                h = h < 10 ? '0' + h : h;
+                m = m < 10 ? '0' + m : m;
+                s = s < 10 ? '0' + s : s;
+                document.getElementById('admin-clock').innerText = `${h}:${m}:${s}`;
+            }, 1000);
+        }
+
+        // تحديث إحصائيات لوحة التحكم
+        function updateDashboardStats() {
+            document.getElementById('stat-revenue').innerText = `${totalRevenue} شيكل`;
+            document.getElementById('stat-orders-count').innerText = `${orderLogs.length} طلب`;
+            
+            let totalStock = cardInventory['1'].length + cardInventory['3'].length + cardInventory['50'].length;
+            document.getElementById('stat-total-stock').innerText = `${totalStock} كرت`;
+        }
+
+        // التبديل بين فئات إدارة المخزون
+        function switchInventoryTab(tab, btnElement) {
+            activeTab = tab;
+            
+            // تحديث تصميم التبويبات النشطة
+            const tabButtons = document.querySelectorAll('.inventory-tabs .inv-tab-btn');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            updateCurrentStockView();
+        }
+
+        // تحديث عرض المخزون للفئة النشطة حالياً
+        function updateCurrentStockView() {
+            const stockCount = cardInventory[activeTab] ? cardInventory[activeTab].length : 0;
+            document.getElementById('currentStockDisplay').innerText = `${stockCount} كروت`;
+        }
+
+        // إضافة كارت جديد (يوزر وباس) للمخزون
+        function addCardsToInventory() {
+            const userEl = document.getElementById('newCardUser');
+            const passEl = document.getElementById('newCardPass');
+            
+            const username = userEl.value.trim();
+            const password = passEl.value.trim();
+            
+            if (!username) {
+                alert("برجاء إدخال اسم المستخدم أولاً!");
+                return;
+            }
+
+            const newCard = {
+                username: username,
+                password: password
+            };
+
+            // إضافة للمستودع
+            cardInventory[activeTab].push(newCard);
+            
+            // حفظ التغييرات
+            localStorage.setItem('mn_card_inventory', JSON.stringify(cardInventory));
+            
+            // تفريغ الحقل وتحديث العرض
+            userEl.value = '';
+            passEl.value = '';
+            updateCurrentStockView();
+            updateDashboardStats();
+
+            // إظهار رسالة نجاح خفيفة بدلاً من alert
+            showToast(`✅ تمت إضافة الكرت لمخزون فئة ${activeTab} شيكل! 💳`);
+            userEl.focus();
+        }
+
+        // تفريغ مخزون التبويب الحالي
+        function clearStockForTab() {
+            if (confirm(`هل أنت متأكد من رغبتك في تفريغ كامل مخزون فئة ${activeTab} شيكل؟`)) {
+                cardInventory[activeTab] = [];
+                localStorage.setItem('mn_card_inventory', JSON.stringify(cardInventory));
+                updateCurrentStockView();
+                updateDashboardStats();
+            }
+        }
+
+        // تفكيك وقراءة كود الطلب فور لصقه
+        // فحص المخزون وسحب كارت تلقائياً للتسليم اليدوي
+        function loadManualCardFromStock() {
+            const pkgId = document.getElementById('manualPackageSelect').value;
+            const deliveryInput = document.getElementById('cardCodeDeliver');
+            const alertBox = document.getElementById('emptyStockAlert');
+
+            if (cardInventory[pkgId] && cardInventory[pkgId].length > 0) {
+                const cardObj = cardInventory[pkgId][0];
+                if (typeof cardObj === 'object' && cardObj !== null) {
+                    deliveryInput.value = cardObj.password ? `${cardObj.username} (كلمة المرور: ${cardObj.password})` : cardObj.username;
+                } else {
+                    deliveryInput.value = cardObj;
+                }
+                alertBox.style.display = 'none';
+            } else {
+                deliveryInput.value = '';
+                alertBox.style.display = 'block';
+            }
+        }
+
+        // توليد كود كارت عشوائي يدوياً للتسجيل السريع
+        function generateRandomCard() {
+            const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase() + Math.floor(100 + Math.random() * 900);
+            document.getElementById('cardCodeDeliver').value = randomCode;
+        }
+
+        // إتمام التسليم اليدوي، خصم الكارت، وتحديث قائمة اليوزرات المستخدمة
+        function deliverManualCardToBuyer() {
+            const pkgId = document.getElementById('manualPackageSelect').value;
+            const buyerPhone = document.getElementById('manualBuyerPhone').value.trim() || 'يدوي';
+            const cardInputVal = document.getElementById('cardCodeDeliver').value.trim();
+
+            if (!cardInputVal) {
+                alert("برجاء إدخال كود الكارت أولاً لتسليمه!");
+                return;
+            }
+
+            // 1. خصم الكارت من المخزون الفعلي (إذا كان موجوداً في المخزن)
+            let cardObj = null;
+            let wasInInventory = false;
+            
+            // البحث عن كارت يطابق المدخلات في المخزن لخصمه
+            if (cardInventory[pkgId] && cardInventory[pkgId].length > 0) {
+                const firstCard = cardInventory[pkgId][0];
+                if (typeof firstCard === 'object' && firstCard !== null && (firstCard.username === cardInputVal || `${firstCard.username} (كلمة المرور: ${firstCard.password})` === cardInputVal)) {
+                    cardObj = cardInventory[pkgId].shift(); // إزالته من المخزون
+                    wasInInventory = true;
+                } else if (typeof firstCard === 'string' && firstCard === cardInputVal) {
+                    cardObj = cardInventory[pkgId].shift(); // إزالته من المخزون
+                    wasInInventory = true;
+                }
+            }
+            
+            // إذا لم يتم العثور عليه (مثلاً تم كتابته يدوياً)، ننشئ كارت مؤقت
+            if (!cardObj) {
+                cardObj = { username: cardInputVal, password: '' };
+            }
+
+            const username = typeof cardObj === 'object' ? cardObj.username : cardObj;
+            const password = typeof cardObj === 'object' ? cardObj.password : '';
+
+            // 2. تحديث الحساب المالي الإجمالي والإحصائيات
+            const pkgPrices = { '1': 1, '3': 3, '50': 50 };
+            const amt = pkgPrices[pkgId] || 0;
+            totalRevenue += amt;
+            
+            // 3. كتابة العملية في سجل المعالجة
+            const displayCode = password ? `${username} (كلمة المرور: ${password})` : username;
+            const orderId = 'M-' + Math.floor(1000 + Math.random() * 9000);
+            const newLog = {
+                id: orderId,
+                package: pkgId === '1' ? 'بطاقة 1 شيكل (8 ساعات)' : pkgId === '3' ? 'بطاقة 3 شيكل (24 ساعة)' : 'الباقة الذهبية (50 شيكل)',
+                qty: 1,
+                amount: amt,
+                cardCode: displayCode,
+                timestamp: new Date().toLocaleString('ar-EG')
+            };
+            orderLogs.unshift(newLog); // إلحاقه في أعلى الجدول
+
+            // 4. إضافة الكارت لقائمة اليوزرات المستخدمة
+            usedCards.unshift({
+                username: username,
+                password: password,
+                pkgId: pkgId,
+                pkgName: newLog.package,
+                orderId: orderId,
+                buyerPhone: buyerPhone,
+                usedAt: new Date().toLocaleString('ar-EG'),
+                wasInInventory: wasInInventory
+            });
+
+            // 5. الحفظ في LocalStorage
+            localStorage.setItem('mn_card_inventory', JSON.stringify(cardInventory));
+            localStorage.setItem('mn_order_logs', JSON.stringify(orderLogs));
+            localStorage.setItem('mn_used_cards', JSON.stringify(usedCards));
+            localStorage.setItem('mn_total_revenue', totalRevenue.toString());
+
+            // 6. تحديث المؤشرات الرسومية بالصفحة والجدول
+            updateDashboardStats();
+            updateCurrentStockView();
+            renderLogsTable();
+            if (activeLogTab === 'used') {
+                renderUsedCardsTable();
+            }
+            loadManualCardFromStock(); // تحميل كارت جديد للمرة القادمة تلقائياً
+
+            // 7. توليد رسالة التسليم المنسقة وتجهيزها للنسخ والواتساب
+            const deliveryMsg = `مرحباً، تم تأكيد استلام دفعتك بنجاح لشبكة ماستر نت.\n\nتفاصيل كارت الإنترنت الخاص بك:\n🔑 اسم المستخدم: ${username}${password ? `\n🔒 كلمة المرور: ${password}` : ''}\n\nنتمنى لك اتصالاً سعيداً وسريعاً! 🚀`;
+
+            navigator.clipboard.writeText(deliveryMsg).then(function() {
+                alert(`تم تسجيل العملية بنجاح! 💸\nتم خصم الكارت ونقله إلى قائمة المستخدمين، وتم نسخ رسالة التسليم إلى الحافظة.`);
+                document.getElementById('manualBuyerPhone').value = '';
+            });
+        }
+
+        // إعادة رسم جدول العمليات المنتهية
+        function renderLogsTable() {
+            const tbody = document.getElementById('logsTableBody');
+            if (orderLogs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-gray); padding: 30px;">
+                            لا توجد عمليات مسجلة حالياً.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            orderLogs.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${log.id}</td>
+                    <td>${log.package}</td>
+                    <td>${log.qty}</td>
+                    <td style="color: var(--emerald-neon); font-weight: bold;">${log.amount} شيكل</td>
+                    <td style="font-family: monospace; color: var(--cyan-neon); font-size: 0.95rem; font-weight: bold;">${log.cardCode}</td>
+                    <td style="font-size: 0.8rem; color: var(--text-gray);">${log.timestamp}</td>
+                    <td><span class="badge-status success">مكتمل ومسلّم ✅</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // مسح السجل بالكامل
+        function clearLogsHistory() {
+            if (confirm("🚨 هل أنت متأكد من رغبتك في حذف كامل سجل العمليات المالية والطلبات من النظام بشكل نهائي؟ لا يمكن استرجاع هذه البيانات.")) {
+                orderLogs = [];
+                totalRevenue = 0;
+                localStorage.setItem('mn_order_logs', JSON.stringify(orderLogs));
+                localStorage.setItem('mn_total_revenue', '0');
+                updateDashboardStats();
+                renderLogsTable();
+            }
+        }
+
+        // ==========================================================================
+        // التبويبات وقائمة اليوزرات المستخدمة
+        // ==========================================================================
+        let activeLogTab = 'orders';
+
+        function switchLogTab(tab) {
+            activeLogTab = tab;
+            const ordersWrapper = document.getElementById('ordersLogWrapper');
+            const usedWrapper = document.getElementById('usedCardsWrapper');
+            const ordersBtn = document.getElementById('logTabOrdersBtn');
+            const usedBtn = document.getElementById('logTabUsedBtn');
+            const clearLogBtn = document.getElementById('clearLogBtn');
+            const clearUsedBtn = document.getElementById('clearUsedBtn');
+
+            if (tab === 'orders') {
+                ordersWrapper.style.display = 'block';
+                usedWrapper.style.display = 'none';
+                ordersBtn.classList.add('active');
+                usedBtn.classList.remove('active');
+                clearLogBtn.style.display = 'block';
+                clearUsedBtn.style.display = 'none';
+            } else {
+                ordersWrapper.style.display = 'none';
+                usedWrapper.style.display = 'block';
+                ordersBtn.classList.remove('active');
+                usedBtn.classList.add('active');
+                clearLogBtn.style.display = 'none';
+                clearUsedBtn.style.display = 'block';
+                renderUsedCardsTable();
+            }
+        }
+
+        function renderUsedCardsTable() {
+            const tbody = document.getElementById('usedCardsTableBody');
+            if (usedCards.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-gray); padding: 30px;">
+                            لا توجد يوزرات مستخدمة حالياً.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            usedCards.forEach(card => {
+                const tr = document.createElement('tr');
+                const pkgNames = {
+                    '1': '8 ساعات (1 شيكل)',
+                    '3': '24 ساعة (3 شيكل)',
+                    '50': 'شهري (50 شيكل)'
+                };
+                const displayPkg = pkgNames[card.pkgId] || card.pkgName || 'باقة غير معروفة';
+                const phoneText = card.buyerPhone ? card.buyerPhone : `#${card.orderId}`;
+                tr.innerHTML = `
+                    <td style="font-family: monospace; color: var(--cyan-neon); font-size: 0.95rem; font-weight: bold;">${card.username}</td>
+                    <td style="font-family: monospace; color: var(--text-white); font-size: 0.95rem;">${card.password || '<span style="color:var(--text-gray); font-style:italic;">لا يوجد</span>'}</td>
+                    <td>${displayPkg}</td>
+                    <td style="font-family: monospace;">${phoneText}</td>
+                    <td style="font-size: 0.8rem; color: var(--text-gray);">${card.usedAt}</td>
+                    <td><span class="badge-status" style="background: rgba(0, 119, 255, 0.08); color: var(--blue-neon); border: 1px solid rgba(0, 119, 255, 0.15);">${card.wasInInventory ? 'من المخزون 📥' : 'توليد تلقائي ⚡'}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function clearUsedCardsHistory() {
+            if (confirm("🚨 هل أنت متأكد من رغبتك في حذف كامل قائمة اليوزرات المستخدمة نهائياً؟ لا يمكن استرجاع هذه البيانات.")) {
+                usedCards = [];
+                localStorage.setItem('mn_used_cards', JSON.stringify(usedCards));
+                renderUsedCardsTable();
+                showToast("🗑️ تم مسح قائمة اليوزرات المستخدمة بنجاح!");
+            }
+        }
+
+        // ==========================================================================
+        // استيراد اليوزرات من ملف CSV — مع نافذة معاينة
+        // ==========================================================================
+        let _csvParsedCards = []; // الكروت المحللة مؤقتاً قبل التأكيد
+
+        function importFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rawLines = text.split(/\r?\n/).filter(l => l.trim() !== '' && !l.startsWith('#'));
+                _csvParsedCards = [];
+
+                if (rawLines.length === 0) {
+                    showToast('⚠️ الملف فارغ!');
+                    event.target.value = '';
+                    return;
+                }
+
+                // تخطى سطر الهيدر إذا موجود
+                let start = 0;
+                const first = rawLines[0].toLowerCase();
+                if (first.includes('user') || first.includes('name') || first.includes('id') || first.includes('pass') || first.includes('يوزر') || first.includes('اسم')) {
+                    start = 1;
+                }
+
+                // تحليل كل سطر: إذا 3 أعمدة أو أكثر → الأول ID يُتجاهل
+                for (let i = start; i < rawLines.length; i++) {
+                    const cols = rawLines[i].split(/[,\t;]+/).map(p => p.trim());
+                    let username = '';
+                    let password = '';
+
+                    if (cols.length >= 3) {
+                        // ID , Username , Password → نتجاوز العمود الأول
+                        username = cols[1];
+                        password = cols[2];
+                    } else if (cols.length === 2) {
+                        // Username , Password
+                        username = cols[0];
+                        password = cols[1];
+                    } else {
+                        // يوزر فقط
+                        username = cols[0];
+                    }
+
+                    if (username) {
+                        _csvParsedCards.push({ username, password: password || '' });
+                    }
+                }
+
+                if (_csvParsedCards.length === 0) {
+                    showToast('⚠️ لم يتم العثور على يوزرات في الملف!');
+                    event.target.value = '';
+                    return;
+                }
+
+                showCsvPreview();
+                event.target.value = '';
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function showCsvPreview() {
+            const tbody = document.getElementById('csvPreviewBody');
+            const countBadge = document.getElementById('csvPreviewCount');
+            const targetSpan = document.getElementById('csvTargetTab');
+            const pkgLabels = { '1': '1 شيكل (8 ساعات)', '3': '3 شيكل (24 ساعة)', '50': '50 شيكل (شهري)' };
+
+            countBadge.textContent = _csvParsedCards.length + ' كارت';
+            targetSpan.textContent = pkgLabels[activeTab] || activeTab;
+
+            tbody.innerHTML = '';
+            _csvParsedCards.forEach((card, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td class="csv-user-cell">${escHtml(card.username)}</td>
+                    <td>${card.password
+                        ? `<span class="csv-pass-cell">${escHtml(card.password)}</span>`
+                        : `<span class="csv-pass-empty">— بدون باسورد —</span>`
+                    }</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('csvPreviewModal').style.display = 'flex';
+        }
+
+        function closeCsvPreview() {
+            document.getElementById('csvPreviewModal').style.display = 'none';
+            _csvParsedCards = [];
+        }
+
+        function confirmCsvImport() {
+            if (_csvParsedCards.length === 0) return;
+
+            _csvParsedCards.forEach(card => {
+                cardInventory[activeTab].push(card);
+            });
+
+            localStorage.setItem('mn_card_inventory', JSON.stringify(cardInventory));
+            updateCurrentStockView();
+            updateDashboardStats();
+            loadManualCardFromStock();
+
+            const count = _csvParsedCards.length;
+            closeCsvPreview();
+            showToast(`✅ تم إضافة ${count} كارت للفئة ${activeTab} شيكل بنجاح!`);
+        }
+
+        // مساعد: منع XSS
+        function escHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // ==========================================================================
+        // حفظ واستعادة البيانات كاملة (للعمل عبر أجهزة مختلفة)
+        // ==========================================================================
+        function saveDataToFile() {
+            const allData = {
+                version: '1.0',
+                savedAt: new Date().toLocaleString('ar-EG'),
+                cardInventory: cardInventory,
+                orderLogs: orderLogs,
+                usedCards: usedCards,
+                totalRevenue: totalRevenue,
+                pendingOrders: JSON.parse(localStorage.getItem('mn_pending_orders') || '[]'),
+                approvedOrders: JSON.parse(localStorage.getItem('mn_approved_orders') || '{}'),
+                rejectedOrders: JSON.parse(localStorage.getItem('mn_rejected_orders') || '{}')
+            };
+
+            const jsonStr = JSON.stringify(allData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            // اسم الملف يتضمن التاريخ
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            a.download = `masternet-backup-${dateStr}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('💾 تم حفظ جميع البيانات كملف JSON بنجاح!');
+        }
+
+        function loadDataFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    if (!data.cardInventory) {
+                        alert('❌ الملف غير صالح أو تالف! تأكد أنه ملف نسخة احتياطية من ماستر نت.');
+                        return;
+                    }
+
+                    const confirmLoad = confirm(
+                        `📂 هل تريد استعادة البيانات من هذا الملف؟\n` +
+                        `📅 تاريخ الحفظ: ${data.savedAt || 'غير معروف'}\n\n` +
+                        `⚠️ سيتم استبدال جميع البيانات الحالية بالبيانات المحفوظة!`
+                    );
+
+                    if (!confirmLoad) return;
+
+                    // استعادة البيانات
+                    cardInventory = data.cardInventory || { '1': [], '3': [], '50': [] };
+                    orderLogs = data.orderLogs || [];
+                    usedCards = data.usedCards || [];
+                    totalRevenue = data.totalRevenue || 0;
+
+                    // حفظ في localStorage
+                    localStorage.setItem('mn_card_inventory', JSON.stringify(cardInventory));
+                    localStorage.setItem('mn_order_logs', JSON.stringify(orderLogs));
+                    localStorage.setItem('mn_used_cards', JSON.stringify(usedCards));
+                    localStorage.setItem('mn_total_revenue', totalRevenue.toString());
+
+                    // استعادة حالات الطلبات (معلقة / مقبولة / مرفوضة)
+                    if (data.pendingOrders) localStorage.setItem('mn_pending_orders', JSON.stringify(data.pendingOrders));
+                    if (data.approvedOrders) localStorage.setItem('mn_approved_orders', JSON.stringify(data.approvedOrders));
+                    if (data.rejectedOrders) localStorage.setItem('mn_rejected_orders', JSON.stringify(data.rejectedOrders));
+
+                    // تحديث الواجهة
+                    updateDashboardStats();
+                    updateCurrentStockView();
+                    renderLogsTable();
+                    loadManualCardFromStock();
+                    if (activeLogTab === 'used') renderUsedCardsTable();
+
+                    showToast('✅ تم استعادة جميع البيانات بنجاح!');
+                } catch (err) {
+                    alert('❌ خطأ في قراءة الملف! تأكد أنه ملف JSON صالح.');
+                }
+                // إعادة تعيين حقل الملف
+                event.target.value = '';
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        // ==========================================================================
+        // محرك المزامنة الحية، تشغيل التنبيهات الصوتية والموافقة الفورية بضغطة زر
+        // ==========================================================================
+        let livePendingOrders = [];
+        let mqttAdminClient = null;
+
+        function playNotificationChime() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const playTone = (freq, startTime, duration) => {
+                    const osc = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, startTime);
+                    
+                    gainNode.gain.setValueAtTime(0.12, startTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+                    
+                    osc.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    
+                    osc.start(startTime);
+                    osc.stop(startTime + duration);
+                };
+                
+                const now = audioCtx.currentTime;
+                playTone(1318.51, now, 0.12); // نغمة أولى
+                playTone(1760.00, now + 0.08, 0.28); // نغمة ثانية
+            } catch (e) {
+                console.log("Audio feedback blocked:", e);
+            }
+        }
+
+        function initMqtt() {
+            try {
+                if (typeof mqtt !== 'undefined') {
+                    mqttAdminClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+                    
+                    mqttAdminClient.on('connect', function() {
+                        console.log('Admin connected to MQTT broker.');
+                        mqttAdminClient.subscribe('masternet/orders');
+                    });
+
+                    mqttAdminClient.on('message', function(topic, message) {
+                        if (topic === 'masternet/orders') {
+                            try {
+                                const incomingOrder = JSON.parse(message.toString());
+                                handleIncomingLiveOrder(incomingOrder);
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn('MQTT offline.');
+            }
+        }
+
+        // فحص واسترجاع الطلبات المعلقة محلياً المخزنة في المتصفح
+        function checkLocalPendingOrders() {
+            const localPending = JSON.parse(localStorage.getItem('mn_pending_orders') || '[]');
+            localPending.forEach(order => {
+                if (order.status === 'pending') {
+                    handleIncomingLiveOrder(order, false); // إدخال صامت بدون جرس للمرة الأولى
+                }
+            });
+        }
+
+        // فحص التحديثات المحلية باستمرار عبر التكرار
+        function startLocalStoragePoll() {
+            setInterval(function() {
+                const localPending = JSON.parse(localStorage.getItem('mn_pending_orders') || '[]');
+                localPending.forEach(order => {
+                    const exists = livePendingOrders.some(o => o.id === order.id);
+                    if (!exists && order.status === 'pending') {
+                        handleIncomingLiveOrder(order, true);
+                    }
+                });
+            }, 1000);
+
+            // الاستماع للحدث المباشر للمتصفح
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'mn_pending_orders') {
+                    const localPending = JSON.parse(e.newValue || '[]');
+                    localPending.forEach(order => {
+                        const exists = livePendingOrders.some(o => o.id === order.id);
+                        if (!exists && order.status === 'pending') {
+                            handleIncomingLiveOrder(order, true);
+                        }
+                    });
+                }
+            });
+        }
+
+        // معالجة الطلب الوارد وضمه لطابور العرض المباشر
+        function handleIncomingLiveOrder(order, triggerBell = true) {
+            // التحقق لمنع التكرار
+            const alreadyExists = livePendingOrders.some(o => o.id === order.id);
+            if (alreadyExists) return;
+
+            // تجاهل الطلبات اللي تم قبولها أو رفضها مسبقاً
+            const approvedMap = JSON.parse(localStorage.getItem('mn_approved_orders') || '{}');
+            const rejectedMap = JSON.parse(localStorage.getItem('mn_rejected_orders') || '{}');
+            if (approvedMap[order.id] || rejectedMap[order.id]) return;
+
+            livePendingOrders.push(order);
+            
+            // تشغيل الرنين الفاخر
+            if (triggerBell) {
+                playNotificationChime();
+            }
+
+            // إزالة رسالة خلو الطابور
+            const emptyMsg = document.getElementById('noLiveOrdersMessage');
+            if (emptyMsg) emptyMsg.style.display = 'none';
+
+            // بناء كارت العرض
+            const container = document.getElementById('liveQueueContainer');
+            const card = document.createElement('div');
+            card.className = 'live-order-card';
+            card.id = `live-order-${order.id}`;
+            card.style.background = 'rgba(255, 255, 255, 0.02)';
+            card.style.border = '1px solid rgba(255, 255, 255, 0.06)';
+            card.style.borderRadius = '18px';
+            card.style.padding = '18px';
+            card.style.display = 'flex';
+            card.style.flexDirection = 'column';
+            card.style.gap = '10px';
+            card.style.position = 'relative';
+            card.style.animation = 'popScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 900; color: var(--cyan-neon); font-size: 0.95rem;">طلب مباشر #${order.id}</span>
+                    <span style="font-size: 0.7rem; color: var(--text-gray);">${order.time || ''}</span>
+                </div>
+                
+                <div style="font-size: 0.85rem; font-weight: bold; color: var(--text-white);">
+                    جوال المحوّل منه: <span style="color: var(--cyan-neon); font-family: monospace;">${order.buyerPhone || 'غير متوفر'}</span>
+                </div>
+                
+                <div style="font-size: 0.8rem; color: var(--text-gray); font-weight: 600;">
+                    الباقة: ${order.pkgName} • الكمية: ${order.qty}
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255, 255, 255, 0.06); padding-top: 12px; margin-top: 5px;">
+                    <span style="font-size: 1.1rem; font-weight: 900; color: var(--emerald-neon);">${order.amt} شيكل</span>
+                    
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="jawwal-pay-copy-btn" onclick="approveLiveOrder(${order.id}, '${order.pkgId}', ${order.amt}, '${order.pkgName}', ${order.qty})" style="background: var(--emerald-neon); color: #090d16; font-weight: 900; font-size: 0.72rem; padding: 7px 14px; border-radius: 8px; border: none; cursor: pointer;">
+                            🟢 موافقة وتفعيل
+                        </button>
+                        <button type="button" class="jawwal-pay-copy-btn" onclick="rejectLiveOrder(${order.id})" style="background: rgba(255, 0, 85, 0.1); color: var(--rose-neon); border: 1px solid rgba(255, 0, 85, 0.15); font-size: 0.72rem; padding: 7px 12px; border-radius: 8px; border: none; cursor: pointer;">
+                            ❌ رفض
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(card);
+        }
+
+        // تفعيل وقبول طلب مباشر بنقرة واحدة (يدعم كمية أكثر من كارت)
+        function approveLiveOrder(orderId, pkgId, amt, pkgName, qty) {
+            // 1. سحب كروت بعدد الكمية المطلوبة
+            let pulledCards = [];
+            for (let c = 0; c < qty; c++) {
+                let cardObj = null;
+                let wasInInventory = false;
+                if (cardInventory[pkgId] && cardInventory[pkgId].length > 0) {
+                    cardObj = cardInventory[pkgId].shift();
+                    wasInInventory = true;
+                } else {
+                    const randomUser = Math.random().toString(36).substring(2, 8).toUpperCase() + Math.floor(100 + Math.random() * 900);
+                    cardObj = { username: randomUser, password: '' };
+                }
+                const uname = typeof cardObj === 'object' && cardObj !== null ? cardObj.username : cardObj;
+                const pword = typeof cardObj === 'object' && cardObj !== null ? cardObj.password : '';
+                pulledCards.push({ username: uname, password: pword, wasInInventory });
+            }
+
+            // 2. تحديث الحساب المالي
+            totalRevenue += amt;
+
+            // 3. تحديث مصفوفة الطلبات المعتمدة
+            const approvedMap = JSON.parse(localStorage.getItem('mn_approved_orders') || '{}');
+            approvedMap[orderId] = pulledCards.map(c => ({ username: c.username, password: c.password }));
+            localStorage.setItem('mn_approved_orders', JSON.stringify(approvedMap));
+
+            // تحديث الطلب في طابور pendingOrders
+            const localPending = JSON.parse(localStorage.getItem('mn_pending_orders') || '[]');
+            const updatedPending = localPending.map(order => {
+                if (order.id === orderId) order.status = 'approved';
+                return order;
+            });
+            localStorage.setItem('mn_pending_orders', JSON.stringify(updatedPending));
+
+            // 4. كتابة العملية في سجل المعالجة
+            const allCardsText = pulledCards.map(c => c.password ? `${c.username} (باس: ${c.password})` : c.username).join(' | ');
+            const newLog = {
+                id: orderId,
+                package: pkgName,
+                qty: qty,
+                amount: amt,
+                cardCode: allCardsText,
+                timestamp: new Date().toLocaleString('ar-EG')
+            };
+            orderLogs.unshift(newLog);
+
+            // 5. رقم هاتف المشتري
+            let buyerPhone = 'غير متوفر';
+            const matchingOrder = livePendingOrders.find(o => o.id === orderId);
+            if (matchingOrder && matchingOrder.buyerPhone) {
+                buyerPhone = matchingOrder.buyerPhone;
+            } else {
+                const matchedInPending = localPending.find(o => o.id === orderId);
+                if (matchedInPending && matchedInPending.buyerPhone) buyerPhone = matchedInPending.buyerPhone;
+            }
+
+            // 6. إضافة كل كارت لقائمة اليوزرات المستخدمة
+            pulledCards.forEach(c => {
+                usedCards.unshift({
+                    username: c.username,
+                    password: c.password,
+                    pkgId: pkgId,
+                    pkgName: pkgName,
+                    orderId: orderId,
+                    buyerPhone: buyerPhone,
+                    usedAt: new Date().toLocaleString('ar-EG'),
+                    wasInInventory: c.wasInInventory
+                });
+            });
+
+            // 7. الحفظ الفوري
+            localStorage.setItem('mn_card_inventory', JSON.stringify(cardInventory));
+            localStorage.setItem('mn_order_logs', JSON.stringify(orderLogs));
+            localStorage.setItem('mn_used_cards', JSON.stringify(usedCards));
+            localStorage.setItem('mn_total_revenue', totalRevenue.toString());
+
+            // 8. النشر للشبكة (MQTT) لإخبار صفحة المشتري فوراً
+            if (mqttAdminClient && mqttAdminClient.connected) {
+                mqttAdminClient.publish(`masternet/delivery/${orderId}`, JSON.stringify({
+                    status: 'approved',
+                    cards: pulledCards.map(c => ({ username: c.username, password: c.password }))
+                }));
+            }
+
+            // 9. تحديث واجهات لوحة التحكم
+            updateDashboardStats();
+            updateCurrentStockView();
+            renderLogsTable();
+            if (activeLogTab === 'used') renderUsedCardsTable();
+            loadManualCardFromStock();
+
+            // 10. إزالة الكارت من الطابور البصري
+            removeOrderFromVisualQueue(orderId);
+
+            // 11. رسالة النجاح
+            let alertMsg = `🎉 تمت الموافقة على الطلب #${orderId} بنجاح!\n\n`;
+            pulledCards.forEach((c, i) => {
+                alertMsg += `كارت ${i + 1}: ${c.username}${c.password ? ` | باس: ${c.password}` : ''}\n`;
+            });
+            alert(alertMsg);
+        }
+
+        let currentRejectOrderId = null;
+
+        // رفض وحذف طلب معلق مباشر
+        function rejectLiveOrder(orderId) {
+            currentRejectOrderId = orderId;
+            document.getElementById('rejectReasonInput').value = "لم يصلنا أي تحويل مالي بهذا الرقم أو القيمة غير مطابقة.";
+            document.getElementById('rejectReasonModal').style.display = 'flex';
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectReasonModal').style.display = 'none';
+            currentRejectOrderId = null;
+        }
+
+        function confirmRejectLiveOrder() {
+            const orderId = currentRejectOrderId;
+            if (!orderId) return;
+
+            const reason = document.getElementById('rejectReasonInput').value.trim() || "تم رفض الطلب من قبل الإدارة.";
+
+            // 1. تحديث الطلب محلياً ليصبح مرفوضاً
+            const localPending = JSON.parse(localStorage.getItem('mn_pending_orders') || '[]');
+            const updatedPending = localPending.filter(order => order.id !== orderId);
+            localStorage.setItem('mn_pending_orders', JSON.stringify(updatedPending));
+
+            // حفظ حالة الرفض والسبب محلياً للعملاء على نفس الجهاز
+            const rejectedMap = JSON.parse(localStorage.getItem('mn_rejected_orders') || '{}');
+            rejectedMap[orderId] = { reason: reason };
+            localStorage.setItem('mn_rejected_orders', JSON.stringify(rejectedMap));
+
+            // إرسال إشعار رفض للمشتري
+            if (mqttAdminClient && mqttAdminClient.connected) {
+                mqttAdminClient.publish(`masternet/delivery/${orderId}`, JSON.stringify({
+                    status: 'rejected',
+                    reason: reason
+                }));
+            }
+
+            removeOrderFromVisualQueue(orderId);
+            closeRejectModal();
+            showToast(`❌ تم رفض الطلب #${orderId} وإرسال السبب.`);
+        }
+
+        // إزالة الكارت بصرياً مع الحركات والرسائل الفارغة
+        function removeOrderFromVisualQueue(orderId) {
+            livePendingOrders = livePendingOrders.filter(o => o.id !== orderId);
+            const card = document.getElementById(`live-order-${orderId}`);
+            if (card) {
+                card.style.transform = 'scale(0.8)';
+                card.style.opacity = '0';
+                setTimeout(function() {
+                    card.remove();
+                    
+                    // إذا خلت اللوحة، أعد رسالة الخلو
+                    if (livePendingOrders.length === 0) {
+                        const container = document.getElementById('liveQueueContainer');
+                        container.innerHTML = `
+                            <div id="noLiveOrdersMessage" style="text-align: center; color: var(--text-gray); padding: 40px 10px; font-size: 0.85rem; font-weight: 700; border: 1.5px dashed rgba(255, 255, 255, 0.04); border-radius: 16px;">
+                                👍 لا توجد طلبات معلقة حالياً.
+                                <small style="display: block; margin-top: 6px; font-size: 0.72rem; font-weight: 600; line-height: 1.5;">بمجرد قيام عميل بطلب تفعيل من صفحة الدفع، سيظهر طلبه هنا فوراً مع رنين تنبيه!</small>
+                            </div>
+                        `;
+                    }
+                }, 350);
+            }
+        }
+
+        // ==========================================================================
+        // نظام المصادقة وحماية لوحة الإدارة بكلمة المرور
+        // ==========================================================================
+        const ADMIN_PASSWORD = '123456'; // ← غيّر كلمة المرور هنا
+
+        function checkAuth() {
+            const isLoggedIn = sessionStorage.getItem('mn_admin_auth');
+            if (isLoggedIn === 'true') {
+                // المدير مسجّل دخوله، اعرض لوحة التحكم مباشرة
+                document.getElementById('adminLoginOverlay').style.display = 'none';
+                document.querySelector('.dashboard-container').style.display = 'flex';
+            } else {
+                // غير مصادق، اعرض شاشة تسجيل الدخول
+                document.getElementById('adminLoginOverlay').style.display = 'flex';
+                document.querySelector('.dashboard-container').style.display = 'none';
+                // ركّز على حقل كلمة المرور تلقائياً
+                setTimeout(function() {
+                    document.getElementById('adminPasswordInput').focus();
+                }, 100);
+            }
+        }
+
+        function checkAdminPassword() {
+            const input = document.getElementById('adminPasswordInput').value;
+            const errorMsg = document.getElementById('loginErrorMessage');
+            const loginCard = document.querySelector('#adminLoginOverlay > div');
+
+            if (input === ADMIN_PASSWORD) {
+                // كلمة المرور صحيحة
+                sessionStorage.setItem('mn_admin_auth', 'true');
+                document.getElementById('adminLoginOverlay').style.display = 'none';
+                document.querySelector('.dashboard-container').style.display = 'flex';
+                errorMsg.style.display = 'none';
+                document.getElementById('adminPasswordInput').value = '';
+            } else {
+                // كلمة المرور خاطئة - اهتزاز وإظهار رسالة خطأ
+                errorMsg.style.display = 'block';
+                loginCard.style.animation = 'none';
+                void loginCard.offsetWidth; // إعادة تشغيل الأنيميشن
+                loginCard.style.animation = 'shake 0.4s ease';
+                document.getElementById('adminPasswordInput').value = '';
+                document.getElementById('adminPasswordInput').focus();
+            }
+        }
+
+        function adminLogout() {
+            sessionStorage.removeItem('mn_admin_auth');
+            document.querySelector('.dashboard-container').style.display = 'none';
+            document.getElementById('adminLoginOverlay').style.display = 'flex';
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('loginErrorMessage').style.display = 'none';
+            setTimeout(function() {
+                document.getElementById('adminPasswordInput').focus();
+            }, 100);
+        }
+
+        // التحقق من المصادقة فور تحميل الصفحة (قبل أي شيء آخر)
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+        });
+    </script>
+</body>
+
+</html>

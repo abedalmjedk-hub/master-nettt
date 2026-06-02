@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>شراء بطاقة | ماستر نت</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        @keyframes pulseRadar {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+        @keyframes flashDot {
+            0% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+        @keyframes popScale {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="main-header">
+            <div class="greeting-box">
+                <h2>طلب بطاقة إنترنت</h2>
+                <p>عبر إرسال رسالة SMS بالطلب</p>
+            </div>
+            <div class="time-now"><span id="clock">00:00</span> <small id="ampm"></small></div>
+        </header>
+
+        <main class="login-card">
+            <!-- اختيار الباقة -->
+            <h3 class="pay-title">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="12" y1="4" x2="12" y2="20"></line><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+                1. اختر الباقة المطلوبة:
+            </h3>
+
+            <div class="pay-package-selector">
+                <div class="pay-package-card selected" id="pkg-1" onclick="selectPackage(1, 'بطاقة اليوم السريع (8 ساعات)')">
+                    <div class="package-details">
+                        <strong>بطاقة اليوم السريع (8 ساعات)</strong>
+                        <small>صالحة لمدة 14 ساعة • سرعة 2 ميجا</small>
+                    </div>
+                    <div class="package-price">1 شيكل</div>
+                </div>
+
+                <div class="pay-package-card" id="pkg-3" onclick="selectPackage(3, 'بطاقة التوفير المميزة (24 ساعة)')">
+                    <div class="package-details">
+                        <strong>بطاقة التوفير المميزة (24 ساعة)</strong>
+                        <small>صالحة لمدة 2 أيام • تصفح وتحميل سريع</small>
+                    </div>
+                    <div class="package-price">3 شيكل</div>
+                </div>
+
+                <div class="pay-package-card" id="pkg-50" onclick="selectPackage(50, 'الباقة الذهبية الشهرية')">
+                    <div class="package-details">
+                        <strong>الباقة الذهبية الشهرية</strong>
+                        <small>صالحة لمدة 30 يوم • إنترنت بلا حدود</small>
+                    </div>
+                    <div class="package-price">50 شيكل</div>
+                </div>
+            </div>
+
+            <!-- تحديد الكمية -->
+            <h3 class="pay-title" style="margin-top: 25px;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                2. حدد الكمية المطلوبة:
+            </h3>
+
+            <div class="quantity-section">
+                <div class="quantity-controls">
+                    <button type="button" class="qty-btn" onclick="adjustQuantity(-1)">-</button>
+                    <input type="number" id="quantityInput" class="qty-input" value="1" min="1" readonly>
+                    <button type="button" class="qty-btn" onclick="adjustQuantity(1)">+</button>
+                </div>
+            </div>
+
+            <!-- عرض الحساب الإجمالي -->
+            <div class="total-price-box">
+                <span class="total-price-label">السعر الإجمالي:</span>
+                <strong class="total-price-value" id="totalPriceDisplay">1 شيكل</strong>
+            </div>
+
+            <!-- قسم اختيار طريقة الدفع وخطوات الدفع -->
+            <h3 class="pay-title" style="margin-top: 25px;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                3. طريقة الدفع وتأكيد الطلب:
+            </h3>
+
+            <!-- تبويب اختيار طريقة الدفع -->
+            <div class="tab-container" id="payTabContainer" style="margin-bottom: 18px;">
+                <button type="button" class="tab-btn active" onclick="switchPayMethod('jawwal')">
+                    🟢 محفظة جوال بي
+                </button>
+                <button type="button" class="tab-btn" onclick="switchPayMethod('sms')">
+                    🔵 رسالة SMS
+                </button>
+                <div class="tab-slider" id="payTabSlider" style="width: calc(50% - 5px); transform: translateX(0); left: auto; right: 5px;"></div>
+            </div>
+
+            <div class="pay-method-section">
+                <!-- واجهة جوال بي مع الخطوات -->
+                <div id="jawwalPaySection" class="jawwal-pay-container" style="display: block; margin-top: 0;">
+                    <div class="jawwal-pay-step">
+                        <strong>الخطوة 1:</strong> أرسل قيمة المبلغ الإجمالي لحساب جوال بي للرقم التالي:
+                        <div class="jawwal-pay-number-box" style="margin-top: 8px;">
+                            <span class="jawwal-pay-number" id="walletNumberDisplay">0599332956</span>
+                            <button type="button" class="jawwal-pay-copy-btn" id="copyNumberBtn" onclick="copyWalletNumber()">نسخ الرقم</button>
+                        </div>
+                    </div>
+
+                    <div class="jawwal-pay-step" style="margin-top: 15px; margin-bottom: 0;">
+                        <strong>الخطوة 2:</strong> أدخل رقم هاتفك الذي حوّلت منه ثم أكّد الطلب:
+                        <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--gray);">📱 رقم الهاتف الذي حوّلت منه:</label>
+                            <input
+                                type="tel"
+                                id="buyerPhoneInput"
+                                placeholder="مثال: 0599xxxxxx"
+                                maxlength="15"
+                                style="
+                                    width: 100%;
+                                    background: rgba(0,0,0,0.08);
+                                    border: 1.5px solid rgba(16,185,129,0.25);
+                                    border-radius: 12px;
+                                    padding: 11px 14px;
+                                    font-size: 1rem;
+                                    font-family: monospace;
+                                    font-weight: 700;
+                                    color: var(--navy);
+                                    outline: none;
+                                    direction: ltr;
+                                    text-align: left;
+                                    letter-spacing: 1px;
+                                    transition: border-color 0.2s;
+                                "
+                                onfocus="this.style.borderColor='#10b981'"
+                                onblur="this.style.borderColor='rgba(16,185,129,0.25)'"
+                            >
+                        </div>
+                        <button type="button" class="jawwal-pay-wa-btn" style="background: linear-gradient(135deg, #0077ff, #00e5ff); color: #090d16; margin-top: 12px; box-shadow: 0 6px 18px rgba(0, 229, 255, 0.25); border: none; font-size: 0.95rem;" onclick="submitLiveOrder()">
+                            ⚡ تأكيد وإرسال الطلب تلقائياً
+                        </button>
+                    </div>
+                </div>
+
+                <!-- واجهة رسائل SMS -->
+                <div id="smsPaySection" class="pay-method-card" style="display: none;">
+                    <div class="pay-method-header" style="margin-bottom: 10px;">
+                        <div class="pay-method-icon" style="background: rgba(1, 43, 125, 0.08);">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        </div>
+                        <span class="pay-method-title">طلب الشراء عبر رسالة SMS</span>
+                    </div>
+                    <p style="font-size: 0.78rem; font-weight: 700; color: var(--gray); line-height: 1.5; margin-bottom: 10px;">
+                        سيتم إرسال رسالة الطلب للرقم التالي: <strong style="color: var(--blue);">0599332956</strong>
+                    </p>
+
+                    <div class="pay-code-display" style="text-align: right; direction: rtl; min-height: 80px; flex-direction: column; align-items: flex-start; gap: 8px; margin: 10px 0;">
+                        <span id="smsBodyDisplay" style="width: 100%; font-size: 0.85rem; line-height: 1.6; word-break: break-word;">مرحباً، أود شراء باقة (بطاقة اليوم السريع (8 ساعات))، عدد: 1، بقيمة إجمالية: 1 شيكل لشبكة ماستر نت.</span>
+                        <button type="button" class="jawwal-pay-copy-btn" id="smsCopyBtn" style="align-self: flex-end;" onclick="copySmsText()">نسخ رسالة الطلب</button>
+                    </div>
+
+                    <a href="#" id="smsSendLink" class="pay-action-btn-green">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        إرسال الطلب الآن (SMS)
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <nav class="nav-bar">
+            <a href="login.html" class="nav-btn">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span>الرئيسية</span>
+            </a>
+            <a href="packages.html" class="nav-btn">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"></path><path d="M11 3 8 9l4 13 4-13-3-6"></path><path d="M2 9h20"></path></svg>
+                <span>الباقات</span>
+            </a>
+            <a href="sellers.html" class="nav-btn">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <span>الموزعون</span>
+            </a>
+            <a href="support.html" class="nav-btn">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                <span>الدعم</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- كود التفاعل واحتساب القيم وتوليد الرسالة وكود الطلب -->
+    <script>
+        const walletNumber = '0599332956';
+        let selectedPrice = 1;
+        let selectedName = 'بطاقة اليوم السريع (8 ساعات)';
+        let selectedId = '1';
+        let quantity = 1;
+        let activePayMethod = 'jawwal';
+
+        function selectPackage(price, name) {
+            selectedPrice = price;
+            selectedName = name;
+
+            // تحديد الـ ID المناسب للباقة المحددة
+            if (price === 1) selectedId = '1';
+            else if (price === 3) selectedId = '3';
+            else if (price === 50) selectedId = '50';
+
+            // تحديث تصميم الكارد النشط
+            var cards = document.querySelectorAll('.pay-package-card');
+            cards.forEach(function(card) {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+
+            updateCalculations();
+        }
+
+        function adjustQuantity(amount) {
+            var qtyInput = document.getElementById('quantityInput');
+            var currentVal = parseInt(qtyInput.value) || 1;
+            var newVal = currentVal + amount;
+            if (newVal < 1) newVal = 1;
+            
+            qtyInput.value = newVal;
+            quantity = newVal;
+            
+            updateCalculations();
+        }
+
+        function switchPayMethod(method) {
+            activePayMethod = method;
+            const tabSlider = document.getElementById('payTabSlider');
+            const tabs = document.querySelectorAll('#payTabContainer .tab-btn');
+            
+            if (method === 'jawwal') {
+                tabs[0].classList.add('active');
+                tabs[1].classList.remove('active');
+                tabSlider.style.transform = 'translateX(0)';
+                document.getElementById('jawwalPaySection').style.display = 'block';
+                document.getElementById('smsPaySection').style.display = 'none';
+            } else {
+                tabs[0].classList.remove('active');
+                tabs[1].classList.add('active');
+                tabSlider.style.transform = 'translateX(-100%)';
+                document.getElementById('jawwalPaySection').style.display = 'none';
+                document.getElementById('smsPaySection').style.display = 'block';
+            }
+            updateCalculations();
+        }
+
+        let generatedRandomId = 1000;
+
+        function updateCalculations() {
+            var total = selectedPrice * quantity;
+            
+            // تحديث عرض السعر الإجمالي
+            document.getElementById('totalPriceDisplay').innerText = `${total} شيكل`;
+
+            // 1. تحديثات قسم رسائل SMS
+            var smsText = `مرحباً، أود شراء باقة (${selectedName})، عدد: ${quantity}، بقيمة إجمالية: ${total} شيكل لشبكة ماستر نت.`;
+            document.getElementById('smsBodyDisplay').innerText = smsText;
+
+            var ua = navigator.userAgent.toLowerCase();
+            var separator = (ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1) ? '&' : '?';
+            document.getElementById('smsSendLink').href = `sms:${walletNumber}${separator}body=${encodeURIComponent(smsText)}`;
+
+            generatedRandomId = Math.floor(1000 + Math.random() * 9000); // معرف عشوائي لمنع التكرار
+        }
+
+        function copyWalletNumber() {
+            var num = document.getElementById('walletNumberDisplay').innerText;
+            navigator.clipboard.writeText(num).then(function() {
+                var btn = document.getElementById('copyNumberBtn');
+                btn.innerHTML = "تم نسخ الرقم ✔️";
+                btn.style.background = "#10b981";
+                btn.style.color = "white";
+                setTimeout(function() {
+                    btn.innerHTML = "نسخ الرقم";
+                    btn.style.background = "";
+                    btn.style.color = "";
+                }, 2000);
+            });
+        }
+
+        function copySmsText() {
+            var text = document.getElementById('smsBodyDisplay').innerText;
+            navigator.clipboard.writeText(text).then(function() {
+                var btn = document.getElementById('smsCopyBtn');
+                btn.innerHTML = "تم نسخ الرسالة ✔️";
+                btn.style.background = "#10b981";
+                btn.style.color = "white";
+                setTimeout(function() {
+                    btn.innerHTML = "نسخ رسالة الطلب";
+                    btn.style.background = "";
+                    btn.style.color = "";
+                }, 2000);
+            });
+        }
+
+        // ==========================================================================
+        // محرك الاتصال الفوري والتفعيل التلقائي
+        // ==========================================================================
+        let mqttClient = null;
+        let pendingMqttMessages = []; // طابور الرسائل المنتظرة حتى يكتمل الاتصال
+
+        function initMqtt() {
+            try {
+                if (typeof mqtt !== 'undefined') {
+                    mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+                        reconnectPeriod: 3000,
+                        connectTimeout: 10000
+                    });
+
+                    mqttClient.on('connect', function() {
+                        console.log('✅ Connected to MQTT broker.');
+                        // إرسال أي رسائل كانت منتظرة قبل اكتمال الاتصال
+                        while (pendingMqttMessages.length > 0) {
+                            const msg = pendingMqttMessages.shift();
+                            mqttClient.publish(msg.topic, msg.payload, { qos: 1, retain: true });
+                            console.log('📤 Sent pending order via MQTT.');
+                        }
+                    });
+
+                    mqttClient.on('error', function(err) {
+                        console.warn('MQTT error:', err.message);
+                    });
+                }
+            } catch (e) {
+                console.warn('MQTT initialization bypassed:', e);
+            }
+        }
+
+        // إرسال رسالة MQTT مع ضمان الوصول حتى لو الاتصال لم يكتمل بعد
+        function safeMqttPublish(topic, payload) {
+            if (mqttClient && mqttClient.connected) {
+                mqttClient.publish(topic, payload, { qos: 1, retain: true });
+                console.log('📤 Order sent via MQTT immediately.');
+            } else {
+                // حفظ الرسالة للإرسال فور اكتمال الاتصال
+                pendingMqttMessages.push({ topic: topic, payload: payload });
+                console.warn('⏳ MQTT not ready, order queued for sending.');
+            }
+        }
+
+        let storageInterval = null;
+
+        function submitLiveOrder() {
+            const phoneInput = document.getElementById('buyerPhoneInput').value.trim();
+            if (!phoneInput) {
+                alert("برجاء إدخال رقم الهاتف الذي قمت بالتحويل منه لتأكيد الدفع!");
+                return;
+            }
+            if (phoneInput.length < 9) {
+                alert("برجاء إدخال رقم هاتف صحيح يحتوي على 9 أرقام على الأقل!");
+                return;
+            }
+
+            resetApprovalOverlay();
+
+            const total = selectedPrice * quantity;
+            const now = new Date();
+            const timeStr = `${now.getHours()}:${now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes()}:${now.getSeconds() < 10 ? '0' + now.getSeconds() : now.getSeconds()}`;
+            const dateStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+            
+            const orderObj = {
+                id: generatedRandomId,
+                pkgId: selectedId,
+                pkgName: selectedName,
+                qty: quantity,
+                amt: total,
+                buyerPhone: phoneInput,
+                date: dateStr,
+                time: timeStr,
+                status: 'pending'
+            };
+
+            // 1. الحفظ المحلي لتفعيل المزامنة المباشرة لنفس الجهاز / المتصفح عبر storage events
+            const pendingOrders = JSON.parse(localStorage.getItem('mn_pending_orders') || '[]');
+            pendingOrders.push(orderObj);
+            localStorage.setItem('mn_pending_orders', JSON.stringify(pendingOrders));
+            localStorage.setItem('mn_current_live_order', JSON.stringify(orderObj));
+
+            // 2. النشر للشبكة بضمان الوصول حتى لو الاتصال لم يكتمل بعد
+            safeMqttPublish('masternet/orders', JSON.stringify(orderObj));
+
+            // الاشتراك في قناة استلام البطاقة لهذا الطلب بعينه
+            if (mqttClient) {
+                const subscribeWhenReady = function() {
+                    if (mqttClient.connected) {
+                        mqttClient.subscribe(`masternet/delivery/${generatedRandomId}`, { qos: 1 });
+                    } else {
+                        setTimeout(subscribeWhenReady, 500);
+                    }
+                };
+                subscribeWhenReady();
+            }
+
+            // إرسال إشعار بريدي للمدير بنشوء طلب جديد
+            fetch("https://formsubmit.co/ajax/abedalmjedk@gmail.com", {
+                method: "POST",
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    "الموضوع": "طلب تفعيل كارت إنترنت جديد ⚡",
+                    "رقم الطلب": `#${generatedRandomId}`,
+                    "نوع الباقة": selectedName,
+                    "الكمية المطلوبة": quantity,
+                    "المبلغ الإجمالي": `${total} شيكل`,
+                    "رقم جوال المحوّل": phoneInput,
+                    "وقت الطلب": `${dateStr} ${timeStr}`
+                })
+            })
+            .then(response => response.json())
+            .then(data => console.log("Email notification status:", data))
+            .catch(error => console.warn("Email warning (Make sure formsubmit.co is whitelisted in Mikrotik walled garden):", error));
+
+            // 3. إظهار شاشة الانتظار
+            document.getElementById('overlayOrderIdDisplay').innerText = `#${generatedRandomId}`;
+            document.getElementById('liveApprovalOverlay').style.display = 'flex';
+
+            // 4. تشغيل مستمع المزامنة المحلية السريعة
+            startLiveSyncListener(generatedRandomId);
+        }
+
+        function startLiveSyncListener(orderId) {
+            if (storageInterval) clearInterval(storageInterval);
+
+            // التحقق السريع كل 500 ملي ثانية كفحص نشط (Polling)
+            storageInterval = setInterval(function() {
+                const approvedOrders = JSON.parse(localStorage.getItem('mn_approved_orders') || '{}');
+                if (approvedOrders[orderId]) {
+                    clearInterval(storageInterval);
+                    handleOrderApproved(approvedOrders[orderId]);
+                    return;
+                }
+
+                const rejectedOrders = JSON.parse(localStorage.getItem('mn_rejected_orders') || '{}');
+                if (rejectedOrders[orderId]) {
+                    clearInterval(storageInterval);
+                    handleOrderRejected(rejectedOrders[orderId].reason);
+                }
+            }, 500);
+
+            // الاستماع المباشر لحدث تعديل Storage
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'mn_approved_orders') {
+                    const approved = JSON.parse(e.newValue || '{}');
+                    if (approved[orderId]) {
+                        clearInterval(storageInterval);
+                        handleOrderApproved(approved[orderId]);
+                    }
+                }
+                if (e.key === 'mn_rejected_orders') {
+                    const rejected = JSON.parse(e.newValue || '{}');
+                    if (rejected[orderId]) {
+                        clearInterval(storageInterval);
+                        handleOrderRejected(rejected[orderId].reason);
+                    }
+                }
+            });
+
+            // الاستماع عبر الشبكة للوسيط (MQTT)
+            if (mqttClient) {
+                mqttClient.on('message', function(topic, message) {
+                    if (topic === `masternet/delivery/${orderId}`) {
+                        try {
+                            const res = JSON.parse(message.toString());
+                            if (res.status === 'approved') {
+                                clearInterval(storageInterval);
+                                // دعم الصيغة القديمة (card) والجديدة (cards)
+                                handleOrderApproved(res.cards || res.card);
+                            } else if (res.status === 'rejected') {
+                                clearInterval(storageInterval);
+                                handleOrderRejected(res.reason || "تم رفض الطلب من قبل الإدارة.");
+                            }
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    }
+                });
+            }
+        }
+
+        function handleOrderApproved(cardData) {
+            if (storageInterval) clearInterval(storageInterval);
+
+            // تحويل البيانات لمصفوفة كروت دائماً
+            let cards = [];
+            if (Array.isArray(cardData)) {
+                cards = cardData;
+            } else if (typeof cardData === 'object' && cardData !== null) {
+                cards = [cardData];
+            } else if (typeof cardData === 'string') {
+                cards = [{ username: cardData, password: '' }];
+            }
+
+            // تزيين شاشة النجاح
+            document.getElementById('overlayTitle').innerText = "🎉 تم تفعيل طلبك بنجاح!";
+            document.getElementById('overlayTitle').style.background = "linear-gradient(135deg, white, #00ff88)";
+            document.getElementById('overlayTitle').style.webkitBackgroundClip = "text";
+            document.getElementById('overlayTitle').style.webkitTextFillColor = "transparent";
+
+            document.getElementById('overlaySub').innerText = cards.length > 1
+                ? `تمت الموافقة وتفعيل ${cards.length} كروت إنترنت. اضغط على أي كارت لنسخ بياناته:`
+                : "تمت الموافقة وتفعيل كارت الإنترنت الخاص بك. اضغط دخول تلقائي للتوصيل بالخدمة فوراً:";
+
+            document.getElementById('step1Icon').innerText = "🟢";
+            document.getElementById('step1Text').innerText = "تم استلام القيمة وتأكيد رقم التحويل";
+            document.getElementById('step1Text').style.color = "#00ff88";
+
+            document.getElementById('step2Icon').innerText = "🟢";
+            document.getElementById('step2Text').innerText = "تم إصدار الحساب وتفعيله بنجاح";
+            document.getElementById('step2Text').style.color = "#00ff88";
+            document.getElementById('step2Icon').style.animation = "none";
+
+            const container = document.querySelector('#liveApprovalOverlay .login-card');
+
+            if (!document.getElementById('finalCardDisplayBox')) {
+                const cardBox = document.createElement('div');
+                cardBox.id = 'finalCardDisplayBox';
+                cardBox.style.margin = "20px 0";
+
+                // بناء HTML لكل الكروت
+                let allCardsHtml = '';
+                cards.forEach((c, idx) => {
+                    const user = c.username || '';
+                    const pass = c.password || '';
+                    const label = cards.length > 1 ? `كارت ${idx + 1}` : 'بيانات كارت الإنترنت';
+
+                    allCardsHtml += `
+                        <div style="background: rgba(0,0,0,0.18); padding: 12px; border-radius: 12px; text-align: right; font-weight: bold; ${idx > 0 ? 'margin-top: 10px;' : ''}">
+                            <span style="color: #94a3b8; font-size: 0.75rem; display: block; margin-bottom: 6px;">${label}</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #94a3b8; font-size: 0.82rem;">اليوزر:</span>
+                                <span style="color: #00ff88; font-family: monospace; font-size: 1.05rem;" class="finalUserVal">${user}</span>
+                            </div>
+                            ${pass ? `
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.06); padding-top: 6px; margin-top: 5px;">
+                                <span style="color: #94a3b8; font-size: 0.82rem;">الباس:</span>
+                                <span style="color: #00ff88; font-family: monospace; font-size: 1.05rem;" class="finalPassVal">${pass}</span>
+                            </div>` : ''}
+                        </div>
+                    `;
+                });
+
+                const firstCard = cards[0];
+                cardBox.innerHTML = `
+                    <div style="background: rgba(0, 255, 136, 0.08); border: 2.5px solid #00ff88; border-radius: 18px; padding: 22px; text-align: center; box-shadow: 0 0 20px rgba(0, 255, 136, 0.25); animation: popScale 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-bottom: 18px;">
+                        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 700; display: block; margin-bottom: 10px;">${cards.length > 1 ? `تم تفعيل ${cards.length} كروت:` : 'بيانات كارت الإنترنت الخاص بك:'}</span>
+                        ${allCardsHtml}
+                        <button type="button" class="jawwal-pay-copy-btn" id="copyFinalCardBtn" onclick="copyFinalCode()" style="background: #00ff88; color: #090d16; font-weight: 900; padding: 8px 18px; border-radius: 10px; border: none; cursor: pointer; margin-top: 12px;">نسخ جميع البطاقات</button>
+                    </div>
+
+                    <a href="login.html?username=${encodeURIComponent(firstCard.username || '')}&password=${encodeURIComponent(firstCard.password || '')}&autologin=true" class="pay-action-btn-green" style="background: linear-gradient(135deg, #0077ff, #00e5ff); color: #090d16; font-weight: 900; padding: 16px; border-radius: 18px; box-shadow: 0 8px 24px rgba(0, 229, 255, 0.35); font-size: 1.15rem; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; border: none;">
+                        ⚡ دخول تلقائي بالكارت الأول
+                    </a>
+                `;
+                container.insertBefore(cardBox, container.lastElementChild);
+            }
+        }
+
+        function copyFinalCode() {
+            const users = document.querySelectorAll('.finalUserVal');
+            const passes = document.querySelectorAll('.finalPassVal');
+            let text = '';
+
+            users.forEach((el, i) => {
+                const user = el.innerText;
+                const pass = passes[i] ? passes[i].innerText : '';
+                if (users.length > 1) text += `كارت ${i+1}: `;
+                text += `اليوزر: ${user}`;
+                if (pass) text += ` | الباس: ${pass}`;
+                text += '\n';
+            });
+
+            navigator.clipboard.writeText(text.trim()).then(function() {
+                var btn = document.getElementById('copyFinalCardBtn');
+                btn.innerHTML = "تم النسخ ✔️";
+                setTimeout(function() {
+                    btn.innerHTML = "نسخ جميع البطاقات";
+                }, 2000);
+            });
+        }
+
+        function handleOrderRejected(reason) {
+            if (storageInterval) clearInterval(storageInterval);
+
+            // تحديث العناوين لتشير إلى الرفض
+            const title = document.getElementById('overlayTitle');
+            title.innerText = "❌ تم رفض طلب التفعيل";
+            title.style.background = "linear-gradient(135deg, #ff94b8, #ff0055)";
+            title.style.webkitBackgroundClip = "text";
+            title.style.webkitTextFillColor = "transparent";
+
+            document.getElementById('overlaySub').innerText = "تم مراجعة طلبك من قبل الإدارة ولم تتم الموافقة عليه للسبب الموضح أدناه.";
+
+            // تحديث الخطوات لإظهار الرفض
+            document.getElementById('step1Icon').innerText = "🟢";
+            document.getElementById('step1Text').innerText = "تم استلام الطلب وتدقيقه";
+            document.getElementById('step1Text').style.color = "#00ff88";
+
+            const s2Icon = document.getElementById('step2Icon');
+            s2Icon.innerText = "❌";
+            s2Icon.style.animation = "none";
+            const s2Text = document.getElementById('step2Text');
+            s2Text.innerText = "تم رفض الطلب من قبل الإدارة";
+            s2Text.style.color = "#ff0055";
+
+            // تحديث الرادار ليعبر عن الرفض
+            const radarCenter = document.querySelector('.radar-center');
+            if (radarCenter) {
+                radarCenter.innerText = "❌";
+                radarCenter.style.background = "linear-gradient(135deg, #ff0055, #ff5500)";
+                radarCenter.style.boxShadow = "0 0 15px #ff0055";
+            }
+
+            const container = document.querySelector('#liveApprovalOverlay .login-card');
+            
+            if (!document.getElementById('finalRejectionDisplayBox')) {
+                const rejectBox = document.createElement('div');
+                rejectBox.id = 'finalRejectionDisplayBox';
+                rejectBox.style.margin = "20px 0";
+                
+                rejectBox.innerHTML = `
+                    <div style="background: rgba(255, 0, 85, 0.08); border: 2.5px solid #ff0055; border-radius: 18px; padding: 22px; text-align: center; box-shadow: 0 0 20px rgba(255, 0, 85, 0.25); animation: popScale 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-bottom: 18px;">
+                        <span style="font-size: 0.85rem; color: #f8fafc; font-weight: 700; display: block; margin-bottom: 8px;">سبب الرفض الموضح من الإدارة:</span>
+                        <div style="background: rgba(0,0,0,0.18); padding: 14px; border-radius: 12px;">
+                            <strong style="font-size: 0.95rem; color: #ff94b8; font-weight: 700; line-height: 1.5; display: block;">${reason}</strong>
+                        </div>
+                    </div>
+                    
+                    <button type="button" onclick="closeApprovalOverlay()" style="width: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); color: #f8fafc; border: 1.5px solid rgba(255, 255, 255, 0.1); padding: 14px; border-radius: 16px; font-weight: 700; cursor: pointer; font-size: 1rem; transition: all 0.2s; font-family: 'Cairo', sans-serif;" onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.06)'">
+                        ↩️ تعديل رقم الهاتف أو الباقة والمحاولة مجدداً
+                    </button>
+                `;
+                container.insertBefore(rejectBox, container.lastElementChild);
+            }
+        }
+
+        function closeApprovalOverlay() {
+            // إخفاء الأوفرلاي
+            document.getElementById('liveApprovalOverlay').style.display = 'none';
+            // إرجاع الأوفرلاي لحالته الأصلية للمرة القادمة
+            resetApprovalOverlay();
+        }
+
+        function resetApprovalOverlay() {
+            // إرجاع العناوين لحالتها الأصلية
+            const title = document.getElementById('overlayTitle');
+            if (title) {
+                title.innerText = "بانتظار موافقة الإدارة...";
+                title.style.background = "linear-gradient(135deg, white, #00e5ff)";
+                title.style.webkitBackgroundClip = "text";
+                title.style.webkitTextFillColor = "transparent";
+            }
+
+            const sub = document.getElementById('overlaySub');
+            if (sub) {
+                sub.innerText = "الرجاء عدم إغلاق هذه الصفحة. بمجرد قيام المدير بالموافقة على الطلب وتفعيل العملية، ستظهر بطاقتك هنا فوراً وسيتم توصيلك بالإنترنت.";
+            }
+
+            // إرجاع الأيقونات لحالتها الأصلية
+            const s1Icon = document.getElementById('step1Icon');
+            if (s1Icon) s1Icon.innerText = "🟢";
+            const s1Text = document.getElementById('step1Text');
+            if (s1Text) {
+                s1Text.innerText = "تم إرسال الطلب بنجاح وهو قيد الانتظار";
+                s1Text.style.color = "#f8fafc";
+            }
+
+            const s2Icon = document.getElementById('step2Icon');
+            if (s2Icon) {
+                s2Icon.innerText = "🟡";
+                s2Icon.style.animation = "flashDot 1.2s infinite alternate";
+            }
+            const s2Text = document.getElementById('step2Text');
+            if (s2Text) {
+                s2Text.innerText = "بانتظار موافقة المدير وتفعيل الكارت تلقائياً";
+                s2Text.style.color = "#f8fafc";
+            }
+
+            // إرجاع الرادار لحالته الأصلية
+            const radarCenter = document.querySelector('.radar-center');
+            if (radarCenter) {
+                radarCenter.innerText = "⏳";
+                radarCenter.style.background = "linear-gradient(135deg, #0077ff, #00e5ff)";
+                radarCenter.style.boxShadow = "0 0 15px #00e5ff";
+            }
+
+            // إزالة أي صناديق مضافة سابقاً
+            const finalBox = document.getElementById('finalCardDisplayBox');
+            if (finalBox) finalBox.remove();
+            
+            const rejectBox = document.getElementById('finalRejectionDisplayBox');
+            if (rejectBox) rejectBox.remove();
+        }
+
+        // تشغيل التحديث التلقائي الأول عند التحميل
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCalculations();
+            initMqtt();
+        });
+    </script>
+    <script src="script.js"></script>
+
+    <!-- شاشة الانتظار والتفعيل التلقائي المدمجة -->
+    <div id="liveApprovalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #090d16; z-index: 9999; justify-content: center; align-items: flex-start; padding: 25px; direction: rtl; color: white; overflow-y: auto; -webkit-overflow-scrolling: touch;">
+        <div class="login-card" style="width: 100%; max-width: 380px; text-align: center; background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(0, 229, 255, 0.25); box-shadow: 0 0 35px rgba(0, 229, 255, 0.2);">
+            <!-- رادار النبض التفاعلي -->
+            <div class="radar-container" style="position: relative; width: 100px; height: 100px; margin: 0 auto 25px auto; display: flex; align-items: center; justify-content: center;">
+                <div class="radar-wave" style="position: absolute; width: 80px; height: 80px; border-radius: 50%; background: rgba(0, 229, 255, 0.15); animation: pulseRadar 1.8s infinite ease-out;"></div>
+                <div class="radar-wave" style="position: absolute; width: 80px; height: 80px; border-radius: 50%; background: rgba(0, 229, 255, 0.08); animation: pulseRadar 1.8s infinite ease-out; animation-delay: 0.6s;"></div>
+                <div class="radar-center" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #0077ff, #00e5ff); box-shadow: 0 0 15px #00e5ff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; color: #090d16;">⏳</div>
+            </div>
+
+            <h3 id="overlayTitle" style="font-size: 1.35rem; font-weight: 900; margin-bottom: 12px; background: linear-gradient(135deg, white, #00e5ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">بانتظار موافقة الإدارة...</h3>
+            <p id="overlaySub" style="font-size: 0.82rem; color: #94a3b8; font-weight: 700; line-height: 1.6; margin-bottom: 20px;">الرجاء عدم إغلاق هذه الصفحة. بمجرد قيام المدير بالموافقة على الطلب وتفعيل العملية، ستظهر بطاقتك هنا فوراً وسيتم توصيلك بالإنترنت.</p>
+
+            <!-- خطوات الحالة المباشرة -->
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 15px; display: flex; flex-direction: column; gap: 12px; text-align: right; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 0.82rem; font-weight: 700;">
+                    <span id="step1Icon" style="color: #00ff88;">🟢</span>
+                    <span id="step1Text" style="color: #f8fafc;">تم إرسال الطلب بنجاح وهو قيد الانتظار</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 0.82rem; font-weight: 700;">
+                    <span id="step2Icon" style="color: #ffaa00; animation: flashDot 1.2s infinite alternate;">🟡</span>
+                    <span id="step2Text" style="color: #f8fafc;">بانتظار موافقة المدير وتفعيل الكارت تلقائياً</span>
+                </div>
+            </div>
+
+            <!-- معلومات التفعيل يدوياً -->
+            <div style="font-size: 0.72rem; color: #94a3b8; font-weight: 600; line-height: 1.4; border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 15px;">
+                معرف الطلب الخاص بك: <strong style="color: #00e5ff; font-family: monospace;" id="overlayOrderIdDisplay">#0000</strong>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
