@@ -70,6 +70,10 @@ except ImportError:
 # رقم المحفظة (الي يستقبل التحويلات)
 WALLET_NUMBER = "0599332956"
 
+# إعدادات حساب الجيميل (استخدم كلمة مرور التطبيق - App Password)
+IMAP_EMAIL = "abedalmjedk@gmail.com"
+IMAP_APP_PASSWORD = "emjb eeqn zldk deoh"
+
 # وسيط MQTT
 MQTT_BROKER = "broker.emqx.io"
 MQTT_PORT = 1883
@@ -81,6 +85,8 @@ GMAIL_CHECK_INTERVAL = 15
 
 # الكلمات المفتاحية لتحديد إيميلات جوال بي
 JAWWAL_PAY_SENDERS = [
+    "noreply@jawwalpay.ps",
+    "jawwalpay.ps",
     "jawwalpay",
     "jawwal",
     "paltel",
@@ -108,139 +114,127 @@ JAWWAL_PAY_BODY_KEYWORDS = [
 ]
 
 # ═══════════════════════════════════════════════════════════
-# مخزن البطاقات (cards_pool.json)
+# إدارة مخزن البطاقات من data.js
 # ═══════════════════════════════════════════════════════════
+import random
+import string
 
-def load_cards_pool():
-    """تحميل مخزون البطاقات الجاهزة للتسليم"""
-    if os.path.exists(CARDS_FILE):
-        try:
-            with open(CARDS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    # إنشاء ملف افتراضي إذا لم يكن موجوداً
-    default_pool = {
-        "_تعليمات": "أضف بطاقاتك هنا. كل باقة لها قائمة بطاقات جاهزة. السكريبت يسحب أول بطاقة متاحة عند الموافقة.",
-        "1": [
-            {"username": "user_1day_001", "password": "pass001"},
-            {"username": "user_1day_002", "password": "pass002"}
-        ],
-        "3": [
-            {"username": "user_24h_001", "password": "pass001"},
-            {"username": "user_24h_002", "password": "pass002"}
-        ],
-        "50": [
-            {"username": "user_month_001", "password": "pass001"},
-            {"username": "user_month_002", "password": "pass002"}
-        ]
-    }
-    save_cards_pool(default_pool)
-    return default_pool
-
-
-def save_cards_pool(pool):
-    """حفظ مخزون البطاقات"""
-    with open(CARDS_FILE, "w", encoding="utf-8") as f:
-        json.dump(pool, f, ensure_ascii=False, indent=2)
-
-
-def get_card_from_pool(pkg_id, qty=1):
-    """
-    سحب بطاقة/بطاقات من المخزون.
-    يرجع قائمة بطاقات أو None إذا لا يوجد مخزون كافي.
-    """
-    pool = load_cards_pool()
-    pkg_key = str(pkg_id)
-
-    if pkg_key not in pool or not isinstance(pool[pkg_key], list):
+def load_data_js():
+    """تحميل البيانات من data.js"""
+    data_file = os.path.join(SCRIPT_DIR, "data.js")
+    if not os.path.exists(data_file):
         return None
-
-    available = pool[pkg_key]
-    if len(available) < qty:
-        return None
-
-    # سحب البطاقات المطلوبة
-    cards = available[:qty]
-    pool[pkg_key] = available[qty:]
-    save_cards_pool(pool)
-
-    return cards
-
-
-# ═══════════════════════════════════════════════════════════
-# Gmail API
-# ═══════════════════════════════════════════════════════════
-
-def get_gmail_service():
-    """إنشاء اتصال مع Gmail API"""
     try:
-        from google.auth.transport.requests import Request
-        from google.oauth2.credentials import Credentials
-        from google_auth_oauthlib.flow import InstalledAppFlow
-        from googleapiclient.discovery import build
-    except ImportError:
-        print(f"\n{C_RED}❌ المكتبات غير مثبتة! شغّل الأمر التالي:{C_RESET}")
-        print(f"{C_YELLOW}   pip install -r requirements.txt{C_RESET}\n")
+        with open(data_file, "r", encoding="utf-8") as f:
+            content = f.read()
+        start_idx = content.find('{')
+        end_idx = content.rfind('}')
+        if start_idx != -1 and end_idx != -1:
+            json_str = content[start_idx:end_idx+1]
+            return json.loads(json_str)
+    except Exception as e:
+        logger.error(f"خطأ في قراءة data.js: {e}")
+    return None
+
+def save_data_js(data):
+    """حفظ البيانات إلى data.js"""
+    data_file = os.path.join(SCRIPT_DIR, "data.js")
+    try:
+        with open(data_file, "w", encoding="utf-8") as f:
+            f.write("var MN_SAVED_DATA = " + json.dumps(data, ensure_ascii=False, indent=2) + ";")
+    except Exception as e:
+        logger.error(f"خطأ في حفظ data.js: {e}")
+
+def get_cards_from_data_js(pkg_id, qty=1):
+    """
+    سحب بطاقات من data.js.
+    يرجع (قائمة البطاقات، البيانات المحدثة)
+    إذا لم تتوفر بطاقات، يتم توليدها عشوائياً.
+    """
+    data = load_data_js()
+    if not data:
+        # إذا لم يكن هناك ملف data.js، قم بإنشاء هيكل افتراضي
+        data = {
+            "version": "1.0",
+            "savedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "cardInventory": {"1": [], "3": [], "50": []},
+            "orderLogs": [],
+            "usedCards": [],
+            "totalRevenue": 0,
+            "pendingOrders": [],
+            "approvedOrders": {},
+            "rejectedOrders": {}
+        }
+
+    pkg_key = str(pkg_id)
+    if "cardInventory" not in data:
+        data["cardInventory"] = {"1": [], "3": [], "50": []}
+    if pkg_key not in data["cardInventory"]:
+        data["cardInventory"][pkg_key] = []
+
+    available = data["cardInventory"][pkg_key]
+    cards = []
+    
+    for _ in range(qty):
+        if len(available) > 0:
+            card = available.pop(0)
+            was_in_inventory = True
+        else:
+            # توليد كارت عشوائي
+            rand_user = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6)) + str(random.randint(100, 999))
+            card = {"username": rand_user, "password": ""}
+            was_in_inventory = False
+            
+        if isinstance(card, str):
+            card = {"username": card, "password": ""}
+            
+        card["wasInInventory"] = was_in_inventory
+        cards.append(card)
+        
+    data["cardInventory"][pkg_key] = available
+    return cards, data
+
+
+# ═══════════════════════════════════════════════════════════
+# IMAP Gmail Reader
+# ═══════════════════════════════════════════════════════════
+import imaplib
+import email
+from email.header import decode_header
+
+def connect_imap():
+    """إنشاء اتصال مع الجيميل عبر IMAP"""
+    if IMAP_EMAIL == "ضع_ايميلك_هنا@gmail.com" or IMAP_APP_PASSWORD == "ضع_كلمة_المرور_هنا":
+        print(f"\n{C_RED}❌ يجب وضع الإيميل وكلمة مرور التطبيق (16 حرف) في السطر 74 في ملف verify_transfer.py!{C_RESET}")
         sys.exit(1)
-
-    SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
-    creds = None
-
-    # تحقق من وجود token محفوظ
-    if os.path.exists(TOKEN_FILE):
-        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-
-    # إذا لا يوجد token صالح، اطلب تسجيل دخول
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            try:
-                creds.refresh(Request())
-            except Exception:
-                creds = None
-
-        if not creds:
-            if not os.path.exists(CREDENTIALS_FILE):
-                print(f"\n{C_RED}❌ ملف credentials.json غير موجود!{C_RESET}")
-                print(f"{C_YELLOW}   حمّله من Google Cloud Console وضعه في:{C_RESET}")
-                print(f"   {C_CYAN}{SCRIPT_DIR}{C_RESET}\n")
-                print(f"{C_WHITE}   خطوات الإعداد:{C_RESET}")
-                print(f"   1. ادخل على https://console.cloud.google.com/")
-                print(f"   2. أنشئ مشروع جديد")
-                print(f"   3. فعّل Gmail API")
-                print(f"   4. أنشئ OAuth 2.0 Client ID (Desktop App)")
-                print(f"   5. حمّل credentials.json")
-                print(f"   6. ضعه بجانب هذا الملف وشغّل السكريبت مرة ثانية\n")
-                sys.exit(1)
-
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-            creds = flow.run_local_server(port=0)
-
-        # حفظ التوكن للمرات القادمة
-        with open(TOKEN_FILE, "w") as token:
-            token.write(creds.to_json())
-
-    return build("gmail", "v1", credentials=creds)
+        
+    try:
+        mail = imaplib.IMAP4_SSL("imap.gmail.com")
+        mail.login(IMAP_EMAIL, IMAP_APP_PASSWORD)
+        return mail
+    except Exception as e:
+        print(f"\n{C_RED}❌ فشل الاتصال بالإيميل. تأكد من صحة الإيميل وكلمة مرور التطبيق: {e}{C_RESET}")
+        sys.exit(1)
 
 
 def normalize_phone(phone_str):
-    """تنسيق رقم الهاتف لتسهيل المقارنة"""
+    """تنسيق رقم الهاتف لتسهيل المقارنة - يدعم الصيغ الدولية والمحلية"""
     if not phone_str:
         return ""
-    # إزالة كل شيء عدا الأرقام
-    digits = re.sub(r"[^\d]", "", str(phone_str))
-    # التعامل مع الأرقام الفلسطينية بكل الصيغ
-    if digits.startswith("00970"):
-        digits = "0" + digits[5:]
-    elif digits.startswith("970"):
-        digits = "0" + digits[3:]
-    elif digits.startswith("00972"):
-        digits = "0" + digits[5:]
-    elif digits.startswith("972"):
-        digits = "0" + digits[3:]
-    elif not digits.startswith("0") and len(digits) == 9:
-        digits = "0" + digits
-    return digits
+    # إزالة المسافات والشرطات والأقواس
+    phone = re.sub(r"[\s\-\(\)\.]+", "", str(phone_str))
+    # إزالة مفتاح الدولة الفلسطينية بأي صيغة
+    # 00970 → 0
+    if phone.startswith("00970"):
+        phone = "0" + phone[5:]
+    # +970 → 0
+    elif phone.startswith("+970"):
+        phone = "0" + phone[4:]
+    # 970 (بدون صفر أو +) → 0
+    elif phone.startswith("970") and len(phone) > 9:
+        phone = "0" + phone[3:]
+    return phone
+
 
 
 def extract_transfer_info(email_body, email_subject=""):
@@ -328,48 +322,55 @@ def extract_transfer_info(email_body, email_subject=""):
     return sender_phone, amount, sender_name, reference
 
 
-def get_email_body(service, msg_id):
-    """جلب نص الرسالة كاملاً"""
-    try:
-        message = service.users().messages().get(
-            userId="me", id=msg_id, format="full"
-        ).execute()
+def get_email_body(msg):
+    """استخراج الموضوع والمرسل والنص من رسالة IMAP"""
+    subject = ""
+    if msg["Subject"]:
+        subject_bytes, encoding = decode_header(msg["Subject"])[0]
+        if isinstance(subject_bytes, bytes):
+            subject = subject_bytes.decode(encoding or "utf-8", errors="ignore")
+        else:
+            subject = str(subject_bytes)
 
-        subject = ""
-        sender = ""
-        headers = message.get("payload", {}).get("headers", [])
-        for h in headers:
-            if h["name"].lower() == "subject":
-                subject = h["value"]
-            elif h["name"].lower() == "from":
-                sender = h["value"]
+    sender = ""
+    if msg.get("From"):
+        sender_bytes, encoding = decode_header(msg.get("From"))[0]
+        if isinstance(sender_bytes, bytes):
+            sender = sender_bytes.decode(encoding or "utf-8", errors="ignore")
+        else:
+            sender = str(sender_bytes)
 
-        # استخراج النص من الأجزاء المختلفة
-        body_text = ""
-        payload = message.get("payload", {})
-
-        def extract_text(part):
-            text = ""
-            mime = part.get("mimeType", "")
-            if mime in ("text/plain", "text/html"):
-                data = part.get("body", {}).get("data", "")
-                if data:
-                    decoded = base64.urlsafe_b64decode(data).decode("utf-8", errors="ignore")
-                    # إزالة HTML tags
-                    clean = re.sub(r"<[^>]+>", " ", decoded)
+    body_text = ""
+    if msg.is_multipart():
+        for part in msg.walk():
+            content_type = part.get_content_type()
+            content_disposition = str(part.get("Content-Disposition"))
+            if content_type in ("text/plain", "text/html") and "attachment" not in content_disposition:
+                try:
+                    payload = part.get_payload(decode=True)
+                    if payload:
+                        charset = part.get_content_charset() or "utf-8"
+                        text = payload.decode(charset, errors="ignore")
+                        clean = re.sub(r"<[^>]+>", " ", text)
+                        clean = re.sub(r"\s+", " ", clean).strip()
+                        body_text += clean + " "
+                except:
+                    pass
+    else:
+        content_type = msg.get_content_type()
+        if content_type in ("text/plain", "text/html"):
+            try:
+                payload = msg.get_payload(decode=True)
+                if payload:
+                    charset = msg.get_content_charset() or "utf-8"
+                    text = payload.decode(charset, errors="ignore")
+                    clean = re.sub(r"<[^>]+>", " ", text)
                     clean = re.sub(r"\s+", " ", clean).strip()
-                    text += clean + " "
-            for sub in part.get("parts", []):
-                text += extract_text(sub)
-            return text
-
-        body_text = extract_text(payload)
-
-        return subject, sender, body_text.strip()
-
-    except Exception as e:
-        logger.error(f"خطأ في جلب الرسالة {msg_id}: {e}")
-        return "", "", ""
+                    body_text = clean
+            except:
+                pass
+    
+    return subject, sender, body_text.strip()
 
 
 def is_jawwal_pay_email(subject, sender, body=""):
@@ -574,29 +575,102 @@ class OrderManager:
         return phone_match and amount_match
 
     def _approve_order(self, order_id):
-        """الموافقة على الطلب (تم التحقق من التحويل)"""
+        """الموافقة على الطلب (تم التحقق من التحويل) وسحب الكروت وإرسالها"""
         order = self.pending_orders.get(order_id)
         if not order:
             return
 
-        # إرسال الموافقة عبر MQTT
+        pkg_id = order.get("pkgId", "1")
+        qty = int(order.get("qty", 1))
+        amt = float(order.get("amt", 0))
+        pkg_name = order.get("pkgName", f"باقة {pkg_id}")
+        buyer_phone = order.get("buyerPhone", "غير معروف")
+
+        # سحب الكروت من data.js وتحديث الملف
+        pulled_cards, full_data = get_cards_from_data_js(pkg_id, qty)
+        
+        # إرسال الموافقة عبر MQTT وتتضمن الكروت
         delivery_topic = f"{MQTT_TOPIC_DELIVERY}/{order_id}"
+        
+        # تجهيز الكروت للإرسال للعميل
+        client_cards = [{"username": c["username"], "password": c["password"]} for c in pulled_cards]
+        
         response = {
             "status": "approved",
             "orderId": order_id,
-            "message": "تم التحقق من التحويل بنجاح ✅"
+            "message": "تم التحقق من التحويل بنجاح ✅",
+            "cards": client_cards
         }
 
         self.mqtt_client.publish(delivery_topic, json.dumps(response), qos=1, retain=True)
 
-        # حذف الطلب من القائمة المعلقة
+        # ─── إرسال للسيرفر المحلي أيضاً (الأكثر موثوقية) ───
+        try:
+            import urllib.request
+            req = urllib.request.Request(
+                "http://localhost:8000/delivery",
+                data=json.dumps(response).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            urllib.request.urlopen(req, timeout=2)
+            logger.info(f"{C_GREEN}✅ تم إرسال الكرت للسيرفر المحلي بنجاح{C_RESET}")
+        except Exception as e:
+            logger.warning(f"{C_YELLOW}⚠️ السيرفر المحلي غير متاح (شغّل server.py): {e}{C_RESET}")
+
+        # حذف الطلب من القائمة المعلقة في الذاكرة
         del self.pending_orders[order_id]
+        
+        # ─── تحديث إحصائيات data.js ───
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # إضافة للأرباح
+        full_data["totalRevenue"] = float(full_data.get("totalRevenue", 0)) + amt
+        
+        # إضافة لسجل الطلبات
+        all_cards_text = " | ".join([f"{c['username']} (باس: {c['password']})" if c['password'] else c['username'] for c in pulled_cards])
+        full_data["orderLogs"].insert(0, {
+            "id": order_id,
+            "package": pkg_name,
+            "qty": qty,
+            "amount": amt,
+            "cardCode": all_cards_text,
+            "timestamp": timestamp
+        })
+        
+        # إضافة لقائمة الكروت المستخدمة
+        for c in pulled_cards:
+            full_data["usedCards"].insert(0, {
+                "username": c["username"],
+                "password": c["password"],
+                "pkgId": pkg_id,
+                "pkgName": pkg_name,
+                "orderId": order_id,
+                "buyerPhone": buyer_phone,
+                "usedAt": timestamp,
+                "wasInInventory": c["wasInInventory"]
+            })
+            
+        # تحديث قائمة الطلبات الموافق عليها (للمزامنة مع اللوحة)
+        if "approvedOrders" not in full_data: full_data["approvedOrders"] = {}
+        full_data["approvedOrders"][order_id] = client_cards
+        
+        # إزالة الطلب من قائمة pendingOrders في الملف إذا كان موجوداً
+        if "pendingOrders" in full_data:
+            for pending in full_data["pendingOrders"]:
+                if pending.get("id") == order_id:
+                    pending["status"] = "approved"
+        
+        full_data["savedAt"] = timestamp
+        save_data_js(full_data)
 
         logger.info(f"\n{C_BOLD}{C_GREEN}{'='*55}{C_RESET}")
-        logger.info(f"{C_GREEN}✅ تمت الموافقة على الطلب #{order_id}{C_RESET}")
-        logger.info(f"   📱 رقم العميل: {order['buyerPhone']}")
-        logger.info(f"   💰 المبلغ: {order['amt']} شيكل")
-        logger.info(f"   📋 الباقة: {order.get('pkgName', '?')}")
+        logger.info(f"{C_GREEN}✅ تمت الموافقة على الطلب #{order_id} وتم إرسال الكروت!{C_RESET}")
+        logger.info(f"   📱 رقم العميل: {buyer_phone}")
+        logger.info(f"   💰 المبلغ: {amt} شيكل")
+        logger.info(f"   📋 الباقة: {pkg_name}")
+        for idx, c in enumerate(pulled_cards):
+            logger.info(f"   💳 كارت {idx+1}: {c['username']} {'(تم سحبه من المخزون)' if c['wasInInventory'] else '(توليد عشوائي)'}")
         logger.info(f"{C_GREEN}{'='*55}{C_RESET}\n")
 
     def reject_order(self, order_id, reason="لم يتم التحقق من التحويل"):
@@ -614,6 +688,18 @@ class OrderManager:
         self.mqtt_client.publish(delivery_topic, json.dumps(response), qos=1, retain=True)
 
         order = self.pending_orders.pop(order_id, {})
+        
+        # تحديث حالة الطلب في data.js
+        full_data = load_data_js()
+        if full_data:
+            if "rejectedOrders" not in full_data: full_data["rejectedOrders"] = {}
+            full_data["rejectedOrders"][order_id] = {"reason": reason}
+            
+            if "pendingOrders" in full_data:
+                full_data["pendingOrders"] = [o for o in full_data["pendingOrders"] if o.get("id") != order_id]
+            
+            full_data["savedAt"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            save_data_js(full_data)
 
         logger.info(f"\n{C_BOLD}{C_RED}{'='*55}{C_RESET}")
         logger.info(f"{C_RED}❌ تم رفض الطلب #{order_id}{C_RESET}")
@@ -626,74 +712,86 @@ class OrderManager:
 # المراقب الرئيسي
 # ═══════════════════════════════════════════════════════════
 
-def gmail_monitor(service, manager):
-    """مراقبة الجيميل باستمرار للإيميلات الجديدة"""
-    logger.info(f"{C_CYAN}📧 بدء مراقبة الجيميل... (كل {GMAIL_CHECK_INTERVAL} ثانية){C_RESET}")
+def gmail_monitor(manager):
+    """مراقبة الجيميل عبر IMAP للإيميلات الجديدة"""
+    logger.info(f"{C_CYAN}📧 بدء مراقبة الجيميل عبر IMAP... (كل {GMAIL_CHECK_INTERVAL} ثانية){C_RESET}")
 
-    # بدء المراقبة من الآن فقط (تجاهل الإيميلات القديمة)
-    last_check_time = int(time.time())
+    mail = connect_imap()
+    mail.select("inbox")
+
+    # تسجيل آخر ID رسالة عند البدء لتجاهل الرسائل القديمة
+    status0, all_msgs = mail.search(None, 'ALL')
+    if status0 == "OK" and all_msgs[0]:
+        all_ids = all_msgs[0].split()
+        # تسجيل كل الرسائل الموجودة الآن كـ "قديمة"
+        for mid in all_ids:
+            manager.processed_emails.add(mid)
+        logger.info(f"{C_CYAN}📧 تم تسجيل {len(all_ids)} رسالة قديمة - البوت سيراقب الرسائل الجديدة فقط{C_RESET}")
 
     while True:
         try:
-            # البحث عن إيميلات جديدة بعد آخر فحص
-            query = f"after:{last_check_time} is:unread"
-            results = service.users().messages().list(
-                userId="me", q=query, maxResults=10
-            ).execute()
+            # إعادة الاتصال إذا انقطع
+            try:
+                mail.status("inbox", "(MESSAGES)")
+            except:
+                mail = connect_imap()
+                mail.select("inbox")
 
-            messages = results.get("messages", [])
+            status, messages = mail.search(None, 'UNSEEN')
+            if status == "OK" and messages[0]:
+                msg_ids = messages[0].split()
+                
+                # طباعة رسالة فحص إذا كان هناك رسائل جديدة لم تعالج
+                new_count = sum(1 for mid in msg_ids if mid not in manager.processed_emails)
+                if new_count > 0:
+                    logger.info(f"{C_WHITE}🔍 وصلت {new_count} رسالة جديدة!{C_RESET}")
 
-            if messages:
-                logger.info(f"{C_WHITE}🔍 فحص {len(messages)} رسالة جديدة...{C_RESET}")
+                for msg_id in msg_ids:
+                    if msg_id in manager.processed_emails:
+                        continue
 
-            for msg_info in messages:
-                msg_id = msg_info["id"]
+                    manager.processed_emails.add(msg_id)
 
-                # تجاهل الرسائل المعالجة مسبقاً
-                if msg_id in manager.processed_emails:
-                    continue
+                    res, msg_data = mail.fetch(msg_id, '(RFC822)')
+                    if res == "OK":
+                        raw_email = msg_data[0][1]
+                        msg = email.message_from_bytes(raw_email)
 
-                manager.processed_emails.add(msg_id)
+                        subject, sender, body = get_email_body(msg)
 
-                # جلب تفاصيل الرسالة
-                subject, sender, body = get_email_body(service, msg_id)
+                        if not subject and not body:
+                            continue
 
-                if not subject and not body:
-                    continue
+                        # تحقق إذا كانت من جوال بي (فحص المرسل + الموضوع + النص)
+                        if not is_jawwal_pay_email(subject, sender, body):
+                            continue
 
-                # تحقق إذا كانت من جوال بي (فحص المرسل + الموضوع + النص)
-                if not is_jawwal_pay_email(subject, sender, body):
-                    continue
+                        logger.info(f"\n{C_BOLD}{C_CYAN}{'─'*55}{C_RESET}")
+                        logger.info(f"{C_CYAN}📧 إيميل جوال بي جديد!{C_RESET}")
+                        logger.info(f"   📨 من: {sender}")
+                        logger.info(f"   📋 الموضوع: {subject}")
 
-                logger.info(f"\n{C_BOLD}{C_CYAN}{'─'*55}{C_RESET}")
-                logger.info(f"{C_CYAN}📧 إيميل جوال بي جديد!{C_RESET}")
-                logger.info(f"   📨 من: {sender}")
-                logger.info(f"   📋 الموضوع: {subject}")
+                        # استخراج بيانات التحويل
+                        sender_phone, amount, sender_name, reference = extract_transfer_info(body, subject)
 
-                # استخراج بيانات التحويل
-                sender_phone, amount, sender_name, reference = extract_transfer_info(body, subject)
+                        if sender_phone:
+                            logger.info(f"   📱 رقم المحوّل: {C_GREEN}{sender_phone}{C_RESET}")
+                        elif sender_name:
+                            logger.info(f"   👤 اسم المحوّل: {C_YELLOW}{sender_name}{C_RESET} (بدون رقم)")
 
-                if sender_phone:
-                    logger.info(f"   📱 رقم المحوّل: {C_GREEN}{sender_phone}{C_RESET}")
-                elif sender_name:
-                    logger.info(f"   👤 اسم المحوّل: {C_YELLOW}{sender_name}{C_RESET} (بدون رقم)")
+                        logger.info(f"   💰 المبلغ: {C_GREEN}{amount} ILS{C_RESET}" if amount else f"   💰 المبلغ: {C_YELLOW}غير محدد{C_RESET}")
 
-                logger.info(f"   💰 المبلغ: {C_GREEN}{amount} ILS{C_RESET}" if amount else f"   💰 المبلغ: {C_YELLOW}غير محدد{C_RESET}")
+                        if reference:
+                            logger.info(f"   📎 المرجع: {reference}")
 
-                if reference:
-                    logger.info(f"   📎 المرجع: {reference}")
+                        logger.info(f"{C_CYAN}{'─'*55}{C_RESET}")
 
-                logger.info(f"{C_CYAN}{'─'*55}{C_RESET}")
-
-                if sender_phone or sender_name:
-                    # معالجة التحويل
-                    manager.process_transfer(sender_phone, amount, sender_name, reference)
-                else:
-                    logger.warning(f"   {C_YELLOW}⚠️ تعذر استخراج بيانات المحوّل من الإيميل{C_RESET}")
-                    logger.info(f"   نص الرسالة (أول 200 حرف): {body[:200]}")
-
-            # تحديث وقت آخر فحص
-            last_check_time = int(time.time())
+                        if sender_phone or sender_name:
+                            # معالجة التحويل
+                            manager.process_transfer(sender_phone, amount, sender_name, reference)
+                        else:
+                            logger.warning(f"   {C_YELLOW}⚠️ تعذر استخراج بيانات المحوّل من الإيميل{C_RESET}")
+                            logger.info(f"   نص الرسالة (أول 200 حرف): {body[:200]}")
 
             # تنظيف قائمة الإيميلات المعالجة (أبقي آخر 500)
             if len(manager.processed_emails) > 500:
@@ -701,6 +799,11 @@ def gmail_monitor(service, manager):
 
         except Exception as e:
             logger.error(f"{C_RED}❌ خطأ في مراقبة الجيميل: {e}{C_RESET}")
+            try:
+                mail = connect_imap()
+                mail.select("inbox")
+            except:
+                pass
 
         time.sleep(GMAIL_CHECK_INTERVAL)
 
@@ -786,25 +889,38 @@ def main():
 ╚══════════════════════════════════════════════════════════╝{C_RESET}
     """)
 
-    # 1. الاتصال بـ Gmail
-    logger.info(f"{C_CYAN}📧 جاري الاتصال بـ Gmail API...{C_RESET}")
-    gmail_service = get_gmail_service()
-    logger.info(f"{C_GREEN}✅ تم الاتصال بـ Gmail بنجاح!{C_RESET}")
+    # 1. لم نعد بحاجة للاتصال هنا، الاتصال يتم داخل المراقبة
+    logger.info(f"{C_CYAN}📧 النظام يعمل الآن عبر IMAP مباشرة...{C_RESET}")
 
     # 2. إعداد مدير الطلبات وMQTT
     manager = OrderManager()
     manager.setup_mqtt()
 
-    # 3. تحميل/إنشاء مخزون البطاقات
-    pool = load_cards_pool()
-    total_cards = sum(len(v) for k, v in pool.items() if isinstance(v, list))
+    # 3. تحميل/إنشاء مخزون البطاقات من data.js (تأكيد وجود الملف)
+    data = load_data_js()
+    total_cards = 0
+    if not data:
+        save_data_js({
+            "version": "1.0",
+            "savedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "cardInventory": {"1": [], "3": [], "50": []},
+            "orderLogs": [],
+            "usedCards": [],
+            "totalRevenue": 0
+        })
+        logger.info(f"{C_GREEN}✅ تم إنشاء ملف data.js جديد لمخزون البطاقات{C_RESET}")
+    else:
+        inv = data.get("cardInventory", {})
+        total_cards = sum(len(v) for v in inv.values() if isinstance(v, list))
+        logger.info(f"{C_GREEN}✅ تم تحميل مخزون البطاقات (الإجمالي: {total_cards} بطاقة){C_RESET}")
+    
     logger.info(f"{C_GREEN}🎫 مخزون البطاقات: {total_cards} بطاقة جاهزة{C_RESET}")
 
     if total_cards == 0:
-        logger.warning(f"{C_YELLOW}⚠️ لا توجد بطاقات! أضف بطاقات في: {CARDS_FILE}{C_RESET}")
+        logger.warning(f"{C_YELLOW}⚠️ لا توجد بطاقات! أضف بطاقات في لوحة التحكم{C_RESET}")
 
     # 4. تشغيل مراقب الجيميل في خيط منفصل
-    gmail_thread = threading.Thread(target=gmail_monitor, args=(gmail_service, manager), daemon=True)
+    gmail_thread = threading.Thread(target=gmail_monitor, args=(manager,), daemon=True)
     gmail_thread.start()
 
     # 5. تشغيل واجهة الإدارة في الخيط الرئيسي

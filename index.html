@@ -7,6 +7,8 @@
     <title>لوحة التحكم والإدارة | ماستر نت</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- تحميل البيانات يدوياً من المجلد إن وجدت -->
+    <script src="data.js" onerror="console.log('لا يوجد ملف data.js للتحميل')"></script>
     <style>
         :root {
             --bg-dark: #090d16;
@@ -816,7 +818,11 @@
                 <button class="btn-load" onclick="document.getElementById('loadDataFile').click()" title="تحميل بيانات محفوظة مسبقاً">
                     📂 استعادة البيانات
                 </button>
-                <input type="file" id="loadDataFile" accept=".json" style="display:none" onchange="loadDataFromFile(event)">
+                <input type="file" id="loadDataFile" accept=".js,.json" style="display:none" onchange="loadDataFromFile(event)">
+
+                <button type="button" id="linkFileBtn" onclick="linkLocalFile()" style="background: rgba(0, 229, 255, 0.1); color: var(--cyan-neon); border: 1px solid rgba(0, 229, 255, 0.3); padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 7px; box-shadow: 0 4px 12px rgba(0, 229, 255, 0.15); transition: all 0.3s;">
+                    🔗 ربط الملف المباشر (بدون سيرفر)
+                </button>
 
                 <div class="nav-links">
                     <a href="login.html" class="nav-link">👈 العودة للموقع الرئيسي</a>
@@ -930,29 +936,57 @@
     </div>
 <script>
 // ==========================================
-// نظام الحفظ التلقائي والمزامنة مع خادم بايثون
+// نظام الحفظ التلقائي والمزامنة (بدون سيرفر بايثون)
 // ==========================================
 
-// دالة إرسال البيانات للخادم
+let fileHandle = null;
+
+// ربط الملف باستخدام File System Access API لتحديثه المباشر
+async function linkLocalFile() {
+    try {
+        [fileHandle] = await window.showOpenFilePicker({
+            types: [{ description: 'ملفات البيانات', accept: {'text/javascript': ['.js']} }],
+            multiple: false
+        });
+        
+        document.getElementById('linkFileBtn').innerHTML = '✅ تم ربط الملف بنجاح';
+        document.getElementById('linkFileBtn').style.background = 'rgba(0, 255, 136, 0.1)';
+        document.getElementById('linkFileBtn').style.color = 'var(--emerald-neon)';
+        document.getElementById('linkFileBtn').style.borderColor = 'rgba(0, 255, 136, 0.3)';
+        showToast('🔗 تم ربط ملف data.js بنجاح! سيتم حذف الكروت منه فور استهلاكها.');
+    } catch (err) {
+        console.warn('تم إلغاء تحديد الملف أو المتصفح لا يدعم الميزة', err);
+    }
+}
+
+// دالة تحديث الملف المرتبط مباشرة
 let autoSaveTimeout = null;
 function autoSaveToServer() {
     if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
     autoSaveTimeout = setTimeout(async () => {
         const data = {
-            inventory: localStorage.getItem('mn_card_inventory'),
-            orders: localStorage.getItem('mn_order_logs'),
-            usedCards: localStorage.getItem('mn_used_cards'),
-            totalRevenue: localStorage.getItem('mn_total_revenue') || '0'
+            version: '1.0',
+            savedAt: new Date().toLocaleString('ar-EG'),
+            cardInventory: cardInventory,
+            orderLogs: orderLogs,
+            usedCards: usedCards,
+            totalRevenue: totalRevenue,
+            pendingOrders: JSON.parse(localStorage.getItem('mn_pending_orders') || '[]'),
+            approvedOrders: JSON.parse(localStorage.getItem('mn_approved_orders') || '{}'),
+            rejectedOrders: JSON.parse(localStorage.getItem('mn_rejected_orders') || '{}')
         };
-        try {
-            await fetch('/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            console.log('✅ تم الحفظ التلقائي بنجاح على الخادم');
-        } catch (e) {
-            console.warn('⚠️ فشل الحفظ التلقائي. تأكد من أن خادم بايثون (server.py) قيد التشغيل.', e);
+        
+        // إذا كان الملف المباشر مرتبطاً، قم بتحديثه
+        if (fileHandle) {
+            try {
+                const writable = await fileHandle.createWritable();
+                const jsContent = "var MN_SAVED_DATA = " + JSON.stringify(data, null, 2) + ";";
+                await writable.write(jsContent);
+                await writable.close();
+                console.log('✅ تم حذف الكرت وتحديث الملف المباشر على جهازك بنجاح!');
+            } catch (e) {
+                console.error('❌ فشل الكتابة للملف المرتبط. قد تكون الصلاحية منتهية.', e);
+            }
         }
     }, 1000); // تجميع التعديلات لمدة ثانية
 }
@@ -972,14 +1006,28 @@ localStorage.setItem = function(key, value) {
         const resp = await fetch('/data.json', {cache: 'no-store'});
         if (resp.ok) {
             const data = await resp.json();
-            if (data.inventory) localStorage.setItem('mn_card_inventory', data.inventory);
-            if (data.orders) localStorage.setItem('mn_order_logs', data.orders);
-            if (data.usedCards) localStorage.setItem('mn_used_cards', data.usedCards);
-            if (data.totalRevenue) localStorage.setItem('mn_total_revenue', data.totalRevenue);
+            let changed = false;
             
-            // تحديث الواجهة فور استلام البيانات
-            if (typeof cardInventory !== 'undefined') {
-                location.reload(); // إعادة تحميل خفيفة لضمان رسم الواجهة بالبيانات الجديدة
+            if (data.inventory && data.inventory !== localStorage.getItem('mn_card_inventory')) {
+                localStorage.setItem('mn_card_inventory', data.inventory);
+                changed = true;
+            }
+            if (data.orders && data.orders !== localStorage.getItem('mn_order_logs')) {
+                localStorage.setItem('mn_order_logs', data.orders);
+                changed = true;
+            }
+            if (data.usedCards && data.usedCards !== localStorage.getItem('mn_used_cards')) {
+                localStorage.setItem('mn_used_cards', data.usedCards);
+                changed = true;
+            }
+            if (data.totalRevenue && String(data.totalRevenue) !== localStorage.getItem('mn_total_revenue')) {
+                localStorage.setItem('mn_total_revenue', String(data.totalRevenue));
+                changed = true;
+            }
+            
+            // تحديث الواجهة فور استلام البيانات فقط إذا كان هناك تغيير
+            if (changed && typeof cardInventory !== 'undefined') {
+                location.reload(); 
             }
         }
     } catch(e) {
@@ -1194,18 +1242,45 @@ localStorage.setItem = function(key, value) {
 
         // تهيئة البيانات عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', function() {
-            // استرجاع البيانات المخزنة محلياً
-            if (localStorage.getItem('mn_card_inventory')) {
-                cardInventory = JSON.parse(localStorage.getItem('mn_card_inventory'));
+            // تحميل من data.js إذا وضع المستخدم الملف يدوياً
+            if (typeof MN_SAVED_DATA !== 'undefined' && MN_SAVED_DATA) {
+                if (localStorage.getItem('mn_data_loaded_timestamp') !== MN_SAVED_DATA.savedAt) {
+                    cardInventory = MN_SAVED_DATA.cardInventory || { '1': [], '3': [], '50': [] };
+                    orderLogs = MN_SAVED_DATA.orderLogs || [];
+                    usedCards = MN_SAVED_DATA.usedCards || [];
+                    totalRevenue = MN_SAVED_DATA.totalRevenue || 0;
+                    
+                    localStorage.setItem('mn_card_inventory', JSON.stringify(cardInventory));
+                    localStorage.setItem('mn_order_logs', JSON.stringify(orderLogs));
+                    localStorage.setItem('mn_used_cards', JSON.stringify(usedCards));
+                    localStorage.setItem('mn_total_revenue', totalRevenue.toString());
+                    
+                    if (MN_SAVED_DATA.pendingOrders) localStorage.setItem('mn_pending_orders', JSON.stringify(MN_SAVED_DATA.pendingOrders));
+                    if (MN_SAVED_DATA.approvedOrders) localStorage.setItem('mn_approved_orders', JSON.stringify(MN_SAVED_DATA.approvedOrders));
+                    if (MN_SAVED_DATA.rejectedOrders) localStorage.setItem('mn_rejected_orders', JSON.stringify(MN_SAVED_DATA.rejectedOrders));
+                    
+                    localStorage.setItem('mn_data_loaded_timestamp', MN_SAVED_DATA.savedAt);
+                    setTimeout(() => showToast('✅ تم استيراد البيانات يدوياً من ملف data.js بنجاح!'), 1000);
+                } else {
+                    loadFromLocalStorage();
+                }
+            } else {
+                loadFromLocalStorage();
             }
-            if (localStorage.getItem('mn_order_logs')) {
-                orderLogs = JSON.parse(localStorage.getItem('mn_order_logs'));
-            }
-            if (localStorage.getItem('mn_used_cards')) {
-                usedCards = JSON.parse(localStorage.getItem('mn_used_cards'));
-            }
-            if (localStorage.getItem('mn_total_revenue')) {
-                totalRevenue = parseFloat(localStorage.getItem('mn_total_revenue'));
+
+            function loadFromLocalStorage() {
+                if (localStorage.getItem('mn_card_inventory')) {
+                    cardInventory = JSON.parse(localStorage.getItem('mn_card_inventory'));
+                }
+                if (localStorage.getItem('mn_order_logs')) {
+                    orderLogs = JSON.parse(localStorage.getItem('mn_order_logs'));
+                }
+                if (localStorage.getItem('mn_used_cards')) {
+                    usedCards = JSON.parse(localStorage.getItem('mn_used_cards'));
+                }
+                if (localStorage.getItem('mn_total_revenue')) {
+                    totalRevenue = parseFloat(localStorage.getItem('mn_total_revenue'));
+                }
             }
 
             // تحديث الواجهات والعدادات
@@ -1681,21 +1756,20 @@ localStorage.setItem = function(key, value) {
             };
 
             const jsonStr = JSON.stringify(allData, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+            const jsContent = "var MN_SAVED_DATA = " + jsonStr + ";";
+            
+            const blob = new Blob([jsContent], { type: 'application/javascript;charset=utf-8' });
             const url = URL.createObjectURL(blob);
 
             const a = document.createElement('a');
             a.href = url;
-            // اسم الملف يتضمن التاريخ
-            const now = new Date();
-            const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-            a.download = `masternet-backup-${dateStr}.json`;
+            a.download = `data.js`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            showToast('💾 تم حفظ جميع البيانات كملف JSON بنجاح!');
+            showToast('💾 تم حفظ البيانات كملف data.js بنجاح! ضعه في المجلد لاعتماده تلقائياً.');
         }
 
         function loadDataFromFile(event) {
