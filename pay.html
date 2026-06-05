@@ -477,7 +477,6 @@
                             const res = JSON.parse(message.toString());
                             if (res.status === 'approved') {
                                 clearInterval(storageInterval);
-                                // دعم الصيغة القديمة (card) والجديدة (cards)
                                 handleOrderApproved(res.cards || res.card);
                             } else if (res.status === 'rejected') {
                                 clearInterval(storageInterval);
@@ -489,6 +488,27 @@
                     }
                 });
             }
+
+            // ─── polling من السيرفر المحلي أو الـ VPS (الأكثر موثوقية) ───
+            const serverPollInterval = setInterval(function() {
+                // استخدام مسار نسبي ليعمل سواء كان على اللابتوب أو سيرفر VPS
+                fetch(`/check/${orderId}`)
+                    .then(r => r.json())
+                    .then(function(res) {
+                        if (res.status === 'approved') {
+                            clearInterval(serverPollInterval);
+                            clearInterval(storageInterval);
+                            handleOrderApproved(res.cards || res.card);
+                        } else if (res.status === 'rejected') {
+                            clearInterval(serverPollInterval);
+                            clearInterval(storageInterval);
+                            handleOrderRejected(res.reason || "تم رفض الطلب.");
+                        }
+                    })
+                    .catch(function() {
+                        // السيرفر غير متاح مؤقتاً - نكتفي بـ MQTT
+                    });
+            }, 2000);
         }
 
         function handleOrderApproved(cardData) {
@@ -561,11 +581,22 @@
                         <button type="button" class="jawwal-pay-copy-btn" id="copyFinalCardBtn" onclick="copyFinalCode()" style="background: #00ff88; color: #090d16; font-weight: 900; padding: 8px 18px; border-radius: 10px; border: none; cursor: pointer; margin-top: 12px;">نسخ جميع البطاقات</button>
                     </div>
 
-                    <a href="login.html?username=${encodeURIComponent(firstCard.username || '')}&password=${encodeURIComponent(firstCard.password || '')}&autologin=true" class="pay-action-btn-green" style="background: linear-gradient(135deg, #0077ff, #00e5ff); color: #090d16; font-weight: 900; padding: 16px; border-radius: 18px; box-shadow: 0 8px 24px rgba(0, 229, 255, 0.35); font-size: 1.15rem; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; border: none;">
+                    <a id="autoLoginBtn" href="login.html?username=${encodeURIComponent(firstCard.username || '')}&password=${encodeURIComponent(firstCard.password || '')}&autologin=true" class="pay-action-btn-green" style="background: linear-gradient(135deg, #0077ff, #00e5ff); color: #090d16; font-weight: 900; padding: 16px; border-radius: 18px; box-shadow: 0 8px 24px rgba(0, 229, 255, 0.35); font-size: 1.15rem; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; border: none;">
                         ⚡ دخول تلقائي بالكارت الأول
                     </a>
                 `;
                 container.insertBefore(cardBox, container.lastElementChild);
+
+                // الانتقال التلقائي والدخول بدون ضغط الزبون
+                if (cards.length === 1) {
+                    let btn = document.getElementById('autoLoginBtn');
+                    if (btn) {
+                        btn.innerHTML = "⚡ جاري الدخول وتوصيل الإنترنت تلقائياً...";
+                        setTimeout(function() {
+                            window.location.href = btn.href;
+                        }, 2500); // انتظار 2.5 ثانية ليقرأ الزبون رسالة النجاح ثم ينقله
+                    }
+                }
             }
         }
 
