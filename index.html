@@ -923,45 +923,69 @@
 <button class="btn-neon-cyan" style="margin-top: 10px;" onclick="deliverManualCardToBuyer()">
     ✅ إتمام الدفع ونسخ رسالة التفعيل للعميل
 </button>
-    <button class="btn-secondary" id="saveDataBtn" onclick="exportData()" style="margin-top: 10px;">💾 حفظ البيانات</button>
-    <button class="btn-secondary" id="backupSaveBtn" onclick="saveDataToFile()" style="margin-top: 10px;">💾 حفظ نسخة احتياطية</button>
-    <button class="btn-secondary" id="backupLoadBtn" onclick="document.getElementById('backupFileInput').click()" style="margin-top: 10px;">📂 تحميل نسخة</button>
-    <input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="loadDataFromFile(event)">
+    <div style="margin-top: 15px; padding: 12px; background: rgba(0, 255, 136, 0.05); border: 1px solid rgba(0, 255, 136, 0.2); border-radius: 10px; text-align: center;">
+        <span style="color: var(--emerald-neon); font-weight: bold; font-size: 0.95rem;">
+            🟢 الحفظ التلقائي مفعل (يتم حفظ كل تعديل مباشرة لملف data.json)
+        </span>
+    </div>
 <script>
-// تصدير البيانات إلى ملف JSON في نفس المجلد
-function exportData() {
-    const data = {
-        inventory: localStorage.getItem('mn_card_inventory'),
-        orders: localStorage.getItem('mn_order_logs'),
-        usedCards: localStorage.getItem('mn_used_cards')
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'data.json'; // سيُحفظ في نفس المجلد
-    a.click();
-    URL.revokeObjectURL(url);
-    console.log('Data exported');
+// ==========================================
+// نظام الحفظ التلقائي والمزامنة مع خادم بايثون
+// ==========================================
+
+// دالة إرسال البيانات للخادم
+let autoSaveTimeout = null;
+function autoSaveToServer() {
+    if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(async () => {
+        const data = {
+            inventory: localStorage.getItem('mn_card_inventory'),
+            orders: localStorage.getItem('mn_order_logs'),
+            usedCards: localStorage.getItem('mn_used_cards'),
+            totalRevenue: localStorage.getItem('mn_total_revenue') || '0'
+        };
+        try {
+            await fetch('/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            console.log('✅ تم الحفظ التلقائي بنجاح على الخادم');
+        } catch (e) {
+            console.warn('⚠️ فشل الحفظ التلقائي. تأكد من أن خادم بايثون (server.py) قيد التشغيل.', e);
+        }
+    }, 1000); // تجميع التعديلات لمدة ثانية
 }
 
-// تحميل البيانات من data.json إذا كان موجوداً في نفس المجلد
-async function loadData() {
-    try {
-        const resp = await fetch('data.json', {cache: 'no-store'});
-        if (!resp.ok) return; // لا يوجد ملف
-        const data = await resp.json();
-        if (data.inventory) localStorage.setItem('mn_card_inventory', data.inventory);
-        if (data.orders) localStorage.setItem('mn_order_logs', data.orders);
-        if (data.usedCards) localStorage.setItem('mn_used_cards', data.usedCards);
-        console.log('Data loaded from data.json');
-    } catch (e) {
-        console.warn('Failed to load data.json:', e);
+// اعتراض أي تعديل في التخزين المحلي لتفعيل الحفظ التلقائي
+const originalSetItem = localStorage.setItem;
+localStorage.setItem = function(key, value) {
+    originalSetItem.apply(this, arguments);
+    if (key.startsWith('mn_')) {
+        autoSaveToServer();
     }
-}
+};
 
-// تحميل البيانات عند بدء الصفحة
-window.addEventListener('DOMContentLoaded', loadData);
+// جلب البيانات من الخادم فور فتح الصفحة وتحديث الواجهة
+(async function syncFromServer() {
+    try {
+        const resp = await fetch('/data.json', {cache: 'no-store'});
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data.inventory) localStorage.setItem('mn_card_inventory', data.inventory);
+            if (data.orders) localStorage.setItem('mn_order_logs', data.orders);
+            if (data.usedCards) localStorage.setItem('mn_used_cards', data.usedCards);
+            if (data.totalRevenue) localStorage.setItem('mn_total_revenue', data.totalRevenue);
+            
+            // تحديث الواجهة فور استلام البيانات
+            if (typeof cardInventory !== 'undefined') {
+                location.reload(); // إعادة تحميل خفيفة لضمان رسم الواجهة بالبيانات الجديدة
+            }
+        }
+    } catch(e) {
+        console.log("لم يتم العثور على data.json على الخادم، سيتم استخدام التخزين المحلي.");
+    }
+})();
 </script>
                 </div>
 
