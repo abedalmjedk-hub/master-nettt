@@ -1,0 +1,122 @@
+{
+  "version": "1.0",
+  "savedAt": "٢‏/٦‏/٢٠٢٦، ١٠:٢٨:٥٦ ص",
+  "cardInventory": {
+    "1": [],
+    "3": [],
+    "50": []
+  },
+  "orderLogs": [
+    {
+      "id": 4605,
+      "package": "بطاقة اليوم السريع (8 ساعات)",
+      "qty": 1,
+      "amount": 1,
+      "cardCode": "QRHHEH278",
+      "timestamp": "٢‏/٦‏/٢٠٢٦، ٨:٥٦:٥٩ ص"
+    }
+  ],
+  "usedCards": [
+    {
+      "username": "QRHHEH278",
+      "password": "",
+      "pkgId": "1",
+      "pkgName": "بطاقة اليوم السريع (8 ساعات)",
+      "orderId": 4605,
+      "buyerPhone": "54545454545",
+      "usedAt": "٢‏/٦‏/٢٠٢٦، ٨:٥٦:٥٩ ص",
+      "wasInInventory": false
+    },
+    {
+      "username": "44",
+      "password": "54",
+      "pkgId": "1",
+      "pkgName": "بطاقة 1 شيكل (8 ساعات)",
+      "orderId": "M-8998",
+      "buyerPhone": "يدوي",
+      "usedAt": "٢‏/٦‏/٢٠٢٦، ١:١٤:١٤ ص",
+      "wasInInventory": true
+    },
+    {
+      "username": "YDS5N2887",
+      "password": "",
+      "pkgId": "1",
+      "pkgName": "بطاقة اليوم السريع (8 ساعات)",
+      "orderId": 7089,
+      "buyerPhone": "0599332956",
+      "usedAt": "٢‏/٦‏/٢٠٢٦، ١:٠١:١٧ ص",
+      "wasInInventory": false
+    },
+    {
+      "username": "J927CA146",
+      "password": "",
+      "pkgId": "1",
+      "pkgName": "بطاقة اليوم السريع (8 ساعات)",
+      "orderId": 9983,
+      "buyerPhone": "0599332956",
+      "usedAt": "٢‏/٦‏/٢٠٢٦، ١٢:٥١:٤٠ ص",
+      "wasInInventory": false
+    },
+    {
+      "username": "XR25WP405",
+      "password": "",
+      "pkgId": "1",
+      "pkgName": "بطاقة اليوم السريع (8 ساعات)",
+      "orderId": 3891,
+      "buyerPhone": "059933296",
+      "usedAt": "٢‏/٦‏/٢٠٢٦، ١٢:٤٧:٠٢ ص",
+      "wasInInventory": false
+    },
+    {
+      "username": "111",
+      "password": "222222",
+      "pkgId": "1",
+      "pkgName": "بطاقة اليوم السريع (8 ساعات)",
+      "orderId": 1611,
+      "buyerPhone": "مرحباً، تم تأكي",
+      "usedAt": "٢‏/٦‏/٢٠٢٦، ١٢:٣٩:٥٤ ص",
+      "wasInInventory": true
+    },
+    {
+      "username": "2646",
+      "password": "65",
+      "pkgId": "1",
+      "pkgName": "بطاقة 1 شيكل (8 ساعات)",
+      "orderId": "M-5801",
+      "buyerPhone": "يدوي",
+      "usedAt": "٢‏/٦‏/٢٠٢٦، ١٢:٣٦:٤٤ ص",
+      "wasInInventory": true
+    },
+    {
+      "username": "55",
+      "password": "559",
+      "pkgId": "1",
+      "pkgName": "بطاقة اليوم السريع (8 ساعات)",
+      "orderId": 4617,
+      "buyerPhone": "مرحباً، تم تأكي",
+      "usedAt": "٢‏/٦‏/٢٠٢٦، ١٢:٣٦:١٣ ص",
+      "wasInInventory": true
+    },
+    {
+      "username": "VFUDI1750",
+      "password": "",
+      "pkgId": "1",
+      "pkgName": "بطاقة 1 شيكل (8 ساعات)",
+      "orderId": "M-5133",
+      "buyerPhone": "0599332956",
+      "usedAt": "٢‏/٦‏/٢٠٢٦، ١٢:٣٥:٠٢ ص",
+      "wasInInventory": false
+    },
+    {
+      "username": "111111",
+      "password": "2222",
+      "pkgId": "1",
+      "pkgName": "بطاقة اليوم السريع (8 ساعات)",
+      "orderId": 9320,
+      "buyerPhone": "0599332956",
+      "usedAt": "٢‏/٦‏/٢٠٢٦، ١٢:٣٣:٣٣ ص",
+      "wasInInventory": true
+    }
+  ],
+  "totalRevenue": 1
+}

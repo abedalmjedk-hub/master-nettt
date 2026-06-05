@@ -1,0 +1,18 @@
+{
+  "_تعليمات": "أضف بطاقاتك هنا. كل باقة (1 شيكل، 3 شيكل، 50 شيكل) لها قائمة بطاقات. السكريبت يسحب أول بطاقة عند الموافقة التلقائية.",
+  "_ملاحظة": "المفتاح هو سعر الباقة (1 أو 3 أو 50). أضف بطاقات بنفس التنسيق.",
+  "1": [
+    {"username": "user1day_001", "password": "pass001"},
+    {"username": "user1day_002", "password": "pass002"},
+    {"username": "user1day_003", "password": "pass003"}
+  ],
+  "3": [
+    {"username": "user24h_001", "password": "pass001"},
+    {"username": "user24h_002", "password": "pass002"},
+    {"username": "user24h_003", "password": "pass003"}
+  ],
+  "50": [
+    {"username": "usermonth_001", "password": "pass001"},
+    {"username": "usermonth_002", "password": "pass002"}
+  ]
+}

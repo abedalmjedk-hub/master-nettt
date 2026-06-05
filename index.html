@@ -916,12 +916,53 @@
                 <div class="input-group" id="deliveryContainer" style="display: block;">
                     <label class="input-label" for="cardCodeDeliver">كود الكارت المراد تسليمه:</label>
                     <div style="display: flex; gap: 10px;">
-                        <input type="text" class="neon-input" id="cardCodeDeliver" placeholder="سيتم سحبه من المخزون أو اكتبه يدوياً" style="font-family: monospace;">
-                        <button class="btn-secondary" onclick="generateRandomCard()">توليد كود</button>
-                    </div>
-                    <button class="btn-neon-cyan" style="margin-top: 10px;" onclick="deliverManualCardToBuyer()">
-                        ✅ إتمام الدفع ونسخ رسالة التفعيل للعميل
-                    </button>
+    <input type="text" class="neon-input" id="cardCodeDeliver" placeholder="سيتم سحب الكود من المخزون أو اكتبه يدوياً" style="font-family: monospace;">
+    <button class="btn-secondary" onclick="generateRandomCard()">توليد كود</button>
+    <button class="btn-secondary" onclick="copyCardCode()" style="background:#cbd5e1;color:var(--navy);">نسخ الكود</button>
+</div>
+<button class="btn-neon-cyan" style="margin-top: 10px;" onclick="deliverManualCardToBuyer()">
+    ✅ إتمام الدفع ونسخ رسالة التفعيل للعميل
+</button>
+    <button class="btn-secondary" id="saveDataBtn" onclick="exportData()" style="margin-top: 10px;">💾 حفظ البيانات</button>
+    <button class="btn-secondary" id="backupSaveBtn" onclick="saveDataToFile()" style="margin-top: 10px;">💾 حفظ نسخة احتياطية</button>
+    <button class="btn-secondary" id="backupLoadBtn" onclick="document.getElementById('backupFileInput').click()" style="margin-top: 10px;">📂 تحميل نسخة</button>
+    <input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="loadDataFromFile(event)">
+<script>
+// تصدير البيانات إلى ملف JSON في نفس المجلد
+function exportData() {
+    const data = {
+        inventory: localStorage.getItem('mn_card_inventory'),
+        orders: localStorage.getItem('mn_order_logs'),
+        usedCards: localStorage.getItem('mn_used_cards')
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'data.json'; // سيُحفظ في نفس المجلد
+    a.click();
+    URL.revokeObjectURL(url);
+    console.log('Data exported');
+}
+
+// تحميل البيانات من data.json إذا كان موجوداً في نفس المجلد
+async function loadData() {
+    try {
+        const resp = await fetch('data.json', {cache: 'no-store'});
+        if (!resp.ok) return; // لا يوجد ملف
+        const data = await resp.json();
+        if (data.inventory) localStorage.setItem('mn_card_inventory', data.inventory);
+        if (data.orders) localStorage.setItem('mn_order_logs', data.orders);
+        if (data.usedCards) localStorage.setItem('mn_used_cards', data.usedCards);
+        console.log('Data loaded from data.json');
+    } catch (e) {
+        console.warn('Failed to load data.json:', e);
+    }
+}
+
+// تحميل البيانات عند بدء الصفحة
+window.addEventListener('DOMContentLoaded', loadData);
+</script>
                 </div>
 
                 <div class="alert-box" id="emptyStockAlert" style="display: none; background: rgba(255, 0, 85, 0.04); border-color: rgba(255, 0, 85, 0.15); color: var(--rose-neon);">
